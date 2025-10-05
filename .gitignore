@@ -1,0 +1,63 @@
+# Contract build files
+contracts/cache/
+contracts/out/
+contracts/broadcast/*/31337/
+contracts/broadcast/**/dry-run/
+
+# Environment files (NEVER COMMIT THESE!)
+.env
+.env.local
+.env.*.local
+*.env
+contracts/.env
+frontend/.env.local
+
+# Private keys and sensitive data
+**/private-key*
+**/*private*key*
+**/*PRIVATE*KEY*
+
+# Scripts with embedded keys (keep local only)
+contracts/scripts/
+
+# Node modules
+node_modules/
+**/node_modules/
+frontend/node_modules/
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+frontend/dist/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+**/logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Docs (if you want to keep them local)
+docs/
+
+#scripts
+/scripts
+
+#kiro
+.kiro
