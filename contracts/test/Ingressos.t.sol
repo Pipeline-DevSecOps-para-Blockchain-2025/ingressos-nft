@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Test} from "forge-std/Test.sol";
-import {Ingressos} from "../src/Ingressos.sol";
+import { Test } from "forge-std/Test.sol";
+
+import { Ingressos } from "../src/Ingressos.sol";
 
 contract IngressosTest is Test {
     Ingressos public ingressos;
@@ -23,12 +24,7 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         assertEq(eventId, 1);
@@ -43,17 +39,12 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
         assertEq(tokenId, 1);
         assertEq(ingressos.ownerOf(tokenId), USER);
@@ -66,17 +57,12 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
         address newOwner = address(0x789);
         vm.prank(USER);
@@ -91,17 +77,12 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
         Ingressos.TicketInfo memory originalInfo = ingressos.getTicketInfo(tokenId);
 
@@ -121,17 +102,12 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
         Ingressos.TicketInfo memory originalInfo = ingressos.getTicketInfo(tokenId);
 
@@ -158,17 +134,12 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
         assertTrue(ingressos.isTicketValid(tokenId));
     }
@@ -179,17 +150,12 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
         vm.prank(ORGANIZER);
         ingressos.cancelEvent(eventId);
@@ -203,17 +169,12 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
         (address originalBuyer, address currentOwner) = ingressos.getTicketOwnershipHistory(tokenId);
         assertEq(originalBuyer, USER);
@@ -234,19 +195,21 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
-        (bool isAuthentic, uint256 returnedEventId, uint256 ticketNumber, address originalBuyer, uint256 purchasePrice, uint256 purchaseDate) = ingressos.verifyTicketAuthenticity(tokenId);
+        (
+            bool isAuthentic,
+            uint256 returnedEventId,
+            uint256 ticketNumber,
+            address originalBuyer,
+            uint256 purchasePrice,
+            uint256 purchaseDate
+        ) = ingressos.verifyTicketAuthenticity(tokenId);
 
         assertTrue(isAuthentic);
         assertEq(returnedEventId, eventId);
@@ -262,17 +225,12 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
         address owner2 = address(0x789);
         address owner3 = address(0xabc);
@@ -285,7 +243,7 @@ contract IngressosTest is Test {
 
         assertTrue(ingressos.isTicketValid(tokenId));
 
-        (bool isAuthentic, , , , , ) = ingressos.verifyTicketAuthenticity(tokenId);
+        (bool isAuthentic,,,,,) = ingressos.verifyTicketAuthenticity(tokenId);
         assertTrue(isAuthentic);
     }
 
@@ -295,17 +253,12 @@ contract IngressosTest is Test {
 
         vm.prank(ORGANIZER);
         uint256 eventId = ingressos.createEvent(
-            "Test Concert",
-            "A great concert",
-            block.timestamp + 1 days,
-            "Test Venue",
-            0.1 ether,
-            100
+            "Test Concert", "A great concert", block.timestamp + 1 days, "Test Venue", 0.1 ether, 100
         );
 
         vm.deal(USER, 1 ether);
         vm.prank(USER);
-        uint256 tokenId = ingressos.purchaseTicket{value: 0.1 ether}(eventId);
+        uint256 tokenId = ingressos.purchaseTicket{ value: 0.1 ether }(eventId);
 
         assertEq(ingressos.balanceOf(USER), 1);
         assertEq(ingressos.ownerOf(tokenId), USER);

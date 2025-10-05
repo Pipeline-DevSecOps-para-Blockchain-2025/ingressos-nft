@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract Ingressos is ERC721, AccessControl {
     // Role definitions
@@ -62,32 +62,16 @@ contract Ingressos is ERC721, AccessControl {
 
     // Events
     event EventCreated(
-        uint256 indexed eventId,
-        string name,
-        address indexed organizer,
-        uint256 ticketPrice,
-        uint256 maxSupply
+        uint256 indexed eventId, string name, address indexed organizer, uint256 ticketPrice, uint256 maxSupply
     );
 
     event TicketPurchased(
-        uint256 indexed tokenId,
-        uint256 indexed eventId,
-        address indexed buyer,
-        uint256 ticketNumber,
-        uint256 price
+        uint256 indexed tokenId, uint256 indexed eventId, address indexed buyer, uint256 ticketNumber, uint256 price
     );
 
-    event RevenueWithdrawn(
-        uint256 indexed eventId,
-        address indexed organizer,
-        uint256 amount
-    );
+    event RevenueWithdrawn(uint256 indexed eventId, address indexed organizer, uint256 amount);
 
-    event EventStatusChanged(
-        uint256 indexed eventId,
-        uint8 oldStatus,
-        uint8 newStatus
-    );
+    event EventStatusChanged(uint256 indexed eventId, uint8 oldStatus, uint8 newStatus);
 
     // Modifiers
     modifier onlyOrganizer() {
@@ -107,9 +91,7 @@ contract Ingressos is ERC721, AccessControl {
         _grantRole(ORGANIZER_ROLE, account);
     }
 
-    function revokeOrganizerRole(
-        address account
-    ) external onlyRole(ADMIN_ROLE) {
+    function revokeOrganizerRole(address account) external onlyRole(ADMIN_ROLE) {
         _revokeRole(ORGANIZER_ROLE, account);
     }
 
@@ -151,19 +133,14 @@ contract Ingressos is ERC721, AccessControl {
         return eventId;
     }
 
-    function getEventDetails(
-        uint256 eventId
-    ) external view returns (Event memory) {
+    function getEventDetails(uint256 eventId) external view returns (Event memory) {
         if (events[eventId].createdAt == 0) {
             revert EventNotFound(eventId);
         }
         return events[eventId];
     }
 
-    function updateEventStatus(
-        uint256 eventId,
-        EventStatus newStatus
-    ) external {
+    function updateEventStatus(uint256 eventId, EventStatus newStatus) external {
         Event storage eventData = events[eventId];
 
         if (eventData.createdAt == 0) {
@@ -172,8 +149,7 @@ contract Ingressos is ERC721, AccessControl {
 
         // Only the event organizer or admin can update status
         require(
-            eventData.organizer == msg.sender ||
-                hasRole(ADMIN_ROLE, msg.sender),
+            eventData.organizer == msg.sender || hasRole(ADMIN_ROLE, msg.sender),
             "Not authorized to update event status"
         );
 
@@ -184,9 +160,7 @@ contract Ingressos is ERC721, AccessControl {
     }
 
     // Ticket purchasing system
-    function purchaseTicket(
-        uint256 eventId
-    ) external payable returns (uint256) {
+    function purchaseTicket(uint256 eventId) external payable returns (uint256) {
         Event storage eventData = events[eventId];
 
         // Check if event exists
@@ -237,85 +211,72 @@ contract Ingressos is ERC721, AccessControl {
         // Refund excess payment if any
         if (msg.value > eventData.ticketPrice) {
             uint256 refund = msg.value - eventData.ticketPrice;
-            (bool success, ) = payable(msg.sender).call{value: refund}("");
+            (bool success,) = payable(msg.sender).call{ value: refund }("");
             if (!success) {
                 revert RefundFailed(msg.sender, refund);
             }
         }
 
-        emit TicketPurchased(
-            tokenId,
-            eventId,
-            msg.sender,
-            ticketNumber,
-            eventData.ticketPrice
-        );
+        emit TicketPurchased(tokenId, eventId, msg.sender, ticketNumber, eventData.ticketPrice);
 
         return tokenId;
     }
 
     // Ticket metadata and information system
-    function getTicketInfo(
-        uint256 tokenId
-    ) external view returns (TicketInfo memory) {
+    function getTicketInfo(uint256 tokenId) external view returns (TicketInfo memory) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
         return tickets[tokenId];
     }
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view override returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
 
         TicketInfo memory ticket = tickets[tokenId];
         Event memory eventData = events[ticket.eventId];
 
         // Create JSON metadata
-        return
-            string(
-                abi.encodePacked(
-                    '{"name":"',
-                    eventData.name,
-                    " - Ticket #",
-                    _toString(ticket.ticketNumber),
-                    '","description":"',
-                    eventData.description,
-                    '","image":"data:image/svg+xml;base64,',
-                    _generateTicketSVG(tokenId),
-                    '","attributes":[',
-                    '{"trait_type":"Event","value":"',
-                    eventData.name,
-                    '"},',
-                    '{"trait_type":"Venue","value":"',
-                    eventData.venue,
-                    '"},',
-                    '{"trait_type":"Ticket Number","value":"',
-                    _toString(ticket.ticketNumber),
-                    '"},',
-                    '{"trait_type":"Purchase Price","value":"',
-                    _toString(ticket.purchasePrice),
-                    '"},',
-                    '{"trait_type":"Event Date","value":"',
-                    _toString(eventData.date),
-                    '"},',
-                    '{"trait_type":"Purchase Date","value":"',
-                    _toString(ticket.purchaseDate),
-                    '"},',
-                    '{"trait_type":"Original Buyer","value":"',
-                    _toHexString(ticket.originalBuyer),
-                    '"},',
-                    '{"trait_type":"Event Status","value":"',
-                    _getStatusString(eventData.status),
-                    '"}',
-                    "]}"
-                )
-            );
+        return string(
+            abi.encodePacked(
+                '{"name":"',
+                eventData.name,
+                " - Ticket #",
+                _toString(ticket.ticketNumber),
+                '","description":"',
+                eventData.description,
+                '","image":"data:image/svg+xml;base64,',
+                _generateTicketSVG(tokenId),
+                '","attributes":[',
+                '{"trait_type":"Event","value":"',
+                eventData.name,
+                '"},',
+                '{"trait_type":"Venue","value":"',
+                eventData.venue,
+                '"},',
+                '{"trait_type":"Ticket Number","value":"',
+                _toString(ticket.ticketNumber),
+                '"},',
+                '{"trait_type":"Purchase Price","value":"',
+                _toString(ticket.purchasePrice),
+                '"},',
+                '{"trait_type":"Event Date","value":"',
+                _toString(eventData.date),
+                '"},',
+                '{"trait_type":"Purchase Date","value":"',
+                _toString(ticket.purchaseDate),
+                '"},',
+                '{"trait_type":"Original Buyer","value":"',
+                _toHexString(ticket.originalBuyer),
+                '"},',
+                '{"trait_type":"Event Status","value":"',
+                _getStatusString(eventData.status),
+                '"}',
+                "]}"
+            )
+        );
     }
 
     // Helper functions for metadata generation
-    function _generateTicketSVG(
-        uint256 tokenId
-    ) internal view returns (string memory) {
+    function _generateTicketSVG(uint256 tokenId) internal view returns (string memory) {
         TicketInfo memory ticket = tickets[tokenId];
         Event memory eventData = events[ticket.eventId];
 
@@ -346,13 +307,19 @@ contract Ingressos is ERC721, AccessControl {
         return _base64Encode(bytes(svg));
     }
 
-    function _getStatusString(
-        EventStatus status
-    ) internal pure returns (string memory) {
-        if (status == EventStatus.Active) return "Active";
-        if (status == EventStatus.Paused) return "Paused";
-        if (status == EventStatus.Cancelled) return "Cancelled";
-        if (status == EventStatus.Completed) return "Completed";
+    function _getStatusString(EventStatus status) internal pure returns (string memory) {
+        if (status == EventStatus.Active) {
+            return "Active";
+        }
+        if (status == EventStatus.Paused) {
+            return "Paused";
+        }
+        if (status == EventStatus.Cancelled) {
+            return "Cancelled";
+        }
+        if (status == EventStatus.Completed) {
+            return "Completed";
+        }
         return "Unknown";
     }
 
@@ -393,13 +360,12 @@ contract Ingressos is ERC721, AccessControl {
         return bytes1(uint8(87 + value));
     }
 
-    function _base64Encode(
-        bytes memory data
-    ) internal pure returns (string memory) {
-        if (data.length == 0) return "";
+    function _base64Encode(bytes memory data) internal pure returns (string memory) {
+        if (data.length == 0) {
+            return "";
+        }
 
-        string
-            memory table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        string memory table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         uint256 encodedLen = 4 * ((data.length + 2) / 3);
         string memory result = new string(encodedLen + 32);
 
@@ -407,29 +373,16 @@ contract Ingressos is ERC721, AccessControl {
             let tablePtr := add(table, 1)
             let resultPtr := add(result, 32)
 
-            for {
-                let i := 0
-            } lt(i, mload(data)) {
-                i := add(i, 3)
-            } {
+            for { let i := 0 } lt(i, mload(data)) { i := add(i, 3) } {
                 let input := and(mload(add(data, add(i, 32))), 0xffffff)
 
                 let out := mload(add(tablePtr, and(shr(18, input), 0x3F)))
                 out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF)
-                )
+                out := add(out, and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF))
                 out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF)
-                )
+                out := add(out, and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF))
                 out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(input, 0x3F))), 0xFF)
-                )
+                out := add(out, and(mload(add(tablePtr, and(input, 0x3F))), 0xFF))
                 out := shl(224, out)
 
                 mstore(resultPtr, out)
@@ -438,12 +391,8 @@ contract Ingressos is ERC721, AccessControl {
             }
 
             switch mod(mload(data), 3)
-            case 1 {
-                mstore(sub(resultPtr, 2), shl(240, 0x3d3d))
-            }
-            case 2 {
-                mstore(sub(resultPtr, 1), shl(248, 0x3d))
-            }
+            case 1 { mstore(sub(resultPtr, 2), shl(240, 0x3d3d)) }
+            case 2 { mstore(sub(resultPtr, 1), shl(248, 0x3d)) }
 
             mstore(result, encodedLen)
         }
@@ -461,10 +410,7 @@ contract Ingressos is ERC721, AccessControl {
         }
 
         // Only the event organizer can withdraw revenue
-        require(
-            eventData.organizer == msg.sender,
-            "Only event organizer can withdraw revenue"
-        );
+        require(eventData.organizer == msg.sender, "Only event organizer can withdraw revenue");
 
         uint256 withdrawableAmount = getWithdrawableAmount(eventId);
 
@@ -476,9 +422,7 @@ contract Ingressos is ERC721, AccessControl {
         eventWithdrawnRevenue[eventId] += withdrawableAmount;
 
         // Transfer funds to organizer
-        (bool success, ) = payable(msg.sender).call{value: withdrawableAmount}(
-            ""
-        );
+        (bool success,) = payable(msg.sender).call{ value: withdrawableAmount }("");
         if (!success) {
             revert RefundFailed(msg.sender, withdrawableAmount);
         }
@@ -486,9 +430,7 @@ contract Ingressos is ERC721, AccessControl {
         emit RevenueWithdrawn(eventId, msg.sender, withdrawableAmount);
     }
 
-    function getWithdrawableAmount(
-        uint256 eventId
-    ) public view returns (uint256) {
+    function getWithdrawableAmount(uint256 eventId) public view returns (uint256) {
         if (events[eventId].createdAt == 0) {
             revert EventNotFound(eventId);
         }
@@ -506,9 +448,7 @@ contract Ingressos is ERC721, AccessControl {
         return eventRevenue[eventId];
     }
 
-    function getWithdrawnRevenue(
-        uint256 eventId
-    ) external view returns (uint256) {
+    function getWithdrawnRevenue(uint256 eventId) external view returns (uint256) {
         if (events[eventId].createdAt == 0) {
             revert EventNotFound(eventId);
         }
@@ -524,25 +464,14 @@ contract Ingressos is ERC721, AccessControl {
         }
 
         // Only the event organizer or admin can pause events
-        require(
-            eventData.organizer == msg.sender ||
-                hasRole(ADMIN_ROLE, msg.sender),
-            "Not authorized to pause event"
-        );
+        require(eventData.organizer == msg.sender || hasRole(ADMIN_ROLE, msg.sender), "Not authorized to pause event");
 
-        require(
-            eventData.status == EventStatus.Active,
-            "Event must be active to pause"
-        );
+        require(eventData.status == EventStatus.Active, "Event must be active to pause");
 
         EventStatus oldStatus = eventData.status;
         eventData.status = EventStatus.Paused;
 
-        emit EventStatusChanged(
-            eventId,
-            uint8(oldStatus),
-            uint8(EventStatus.Paused)
-        );
+        emit EventStatusChanged(eventId, uint8(oldStatus), uint8(EventStatus.Paused));
     }
 
     function resumeEvent(uint256 eventId) external {
@@ -553,25 +482,14 @@ contract Ingressos is ERC721, AccessControl {
         }
 
         // Only the event organizer or admin can resume events
-        require(
-            eventData.organizer == msg.sender ||
-                hasRole(ADMIN_ROLE, msg.sender),
-            "Not authorized to resume event"
-        );
+        require(eventData.organizer == msg.sender || hasRole(ADMIN_ROLE, msg.sender), "Not authorized to resume event");
 
-        require(
-            eventData.status == EventStatus.Paused,
-            "Event must be paused to resume"
-        );
+        require(eventData.status == EventStatus.Paused, "Event must be paused to resume");
 
         EventStatus oldStatus = eventData.status;
         eventData.status = EventStatus.Active;
 
-        emit EventStatusChanged(
-            eventId,
-            uint8(oldStatus),
-            uint8(EventStatus.Active)
-        );
+        emit EventStatusChanged(eventId, uint8(oldStatus), uint8(EventStatus.Active));
     }
 
     function cancelEvent(uint256 eventId) external {
@@ -582,26 +500,17 @@ contract Ingressos is ERC721, AccessControl {
         }
 
         // Only the event organizer or admin can cancel events
-        require(
-            eventData.organizer == msg.sender ||
-                hasRole(ADMIN_ROLE, msg.sender),
-            "Not authorized to cancel event"
-        );
+        require(eventData.organizer == msg.sender || hasRole(ADMIN_ROLE, msg.sender), "Not authorized to cancel event");
 
         require(
-            eventData.status == EventStatus.Active ||
-                eventData.status == EventStatus.Paused,
+            eventData.status == EventStatus.Active || eventData.status == EventStatus.Paused,
             "Event must be active or paused to cancel"
         );
 
         EventStatus oldStatus = eventData.status;
         eventData.status = EventStatus.Cancelled;
 
-        emit EventStatusChanged(
-            eventId,
-            uint8(oldStatus),
-            uint8(EventStatus.Cancelled)
-        );
+        emit EventStatusChanged(eventId, uint8(oldStatus), uint8(EventStatus.Cancelled));
 
         // Process refunds for all ticket holders
         _processEventRefunds(eventId);
@@ -620,9 +529,7 @@ contract Ingressos is ERC721, AccessControl {
                 uint256 refundAmount = ticket.purchasePrice;
 
                 // Transfer refund to current ticket owner
-                (bool success, ) = payable(ticketOwner).call{
-                    value: refundAmount
-                }("");
+                (bool success,) = payable(ticketOwner).call{ value: refundAmount }("");
                 if (!success) {
                     revert RefundFailed(ticketOwner, refundAmount);
                 }
@@ -663,7 +570,11 @@ contract Ingressos is ERC721, AccessControl {
         return eventData.createdAt != 0 && eventData.status != EventStatus.Cancelled;
     }
 
-    function getTicketOwnershipHistory(uint256 tokenId) external view returns (address originalBuyer, address currentOwner) {
+    function getTicketOwnershipHistory(uint256 tokenId)
+        external
+        view
+        returns (address originalBuyer, address currentOwner)
+    {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
 
         TicketInfo memory ticket = tickets[tokenId];
@@ -685,14 +596,18 @@ contract Ingressos is ERC721, AccessControl {
         return 1;
     }
 
-    function verifyTicketAuthenticity(uint256 tokenId) external view returns (
-        bool isAuthentic,
-        uint256 eventId,
-        uint256 ticketNumber,
-        address originalBuyer,
-        uint256 purchasePrice,
-        uint256 purchaseDate
-    ) {
+    function verifyTicketAuthenticity(uint256 tokenId)
+        external
+        view
+        returns (
+            bool isAuthentic,
+            uint256 eventId,
+            uint256 ticketNumber,
+            address originalBuyer,
+            uint256 purchasePrice,
+            uint256 purchaseDate
+        )
+    {
         if (_ownerOf(tokenId) == address(0)) {
             return (false, 0, 0, address(0), 0, 0);
         }
@@ -714,9 +629,7 @@ contract Ingressos is ERC721, AccessControl {
     }
 
     // Required override for AccessControl
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC721, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override (ERC721, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
