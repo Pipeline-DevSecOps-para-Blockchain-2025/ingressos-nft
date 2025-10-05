@@ -30,7 +30,7 @@ const ResponsiveContainer: React.FC<ResponsiveContainerProps> = ({
 
   const getPaddingClass = () => {
     if (!padding) return ''
-    
+
     switch (breakpoint) {
       case 'xs':
       case 'sm':

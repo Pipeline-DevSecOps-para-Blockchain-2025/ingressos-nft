@@ -15,11 +15,11 @@ export interface UseTransactionHandlerReturn {
     args: T,
     options?: TransactionOptions
   ) => Promise<void>
-  
+
   // Transaction state
   isExecuting: boolean
   executionError: Error | null
-  
+
   // Transaction status (from useTransactionStatus)
   transaction: ReturnType<typeof useTransactionStatus>['transaction']
   isPending: boolean
@@ -34,10 +34,10 @@ export interface UseTransactionHandlerReturn {
 export const useTransactionHandler = (): UseTransactionHandlerReturn => {
   const [isExecuting, setIsExecuting] = useState(false)
   const [executionError, setExecutionError] = useState<Error | null>(null)
-  
+
   const transactionStatus = useTransactionStatus()
   const { isWritePending } = useIngressosContract()
-  
+
   const executeTransaction = useCallback(async <T extends any[]>(
     contractMethod: (...args: T) => Promise<`0x${string}`>,
     args: T,
@@ -47,16 +47,16 @@ export const useTransactionHandler = (): UseTransactionHandlerReturn => {
       setIsExecuting(true)
       setExecutionError(null)
       transactionStatus.resetTransaction()
-      
+
       // Execute the contract method
       const hash = await contractMethod(...args)
-      
+
       // Start tracking the transaction
       transactionStatus.startTransaction(hash)
-      
+
       // Call success callback
       options?.onSuccess?.(hash)
-      
+
     } catch (error) {
       const err = error as Error
       setExecutionError(err)
@@ -65,7 +65,7 @@ export const useTransactionHandler = (): UseTransactionHandlerReturn => {
       setIsExecuting(false)
     }
   }, [transactionStatus])
-  
+
   // Call confirmed callback when transaction is confirmed
   React.useEffect(() => {
     if (transactionStatus.isConfirmed && transactionStatus.transaction.receipt) {
@@ -73,15 +73,15 @@ export const useTransactionHandler = (): UseTransactionHandlerReturn => {
       // For now, we'll leave it as a placeholder since we don't have the callback in the current state
     }
   }, [transactionStatus.isConfirmed, transactionStatus.transaction.receipt])
-  
+
   return {
     // Transaction execution
     executeTransaction,
-    
+
     // Transaction state
     isExecuting: isExecuting || isWritePending,
     executionError,
-    
+
     // Transaction status
     transaction: transactionStatus.transaction,
     isPending: transactionStatus.isPending,

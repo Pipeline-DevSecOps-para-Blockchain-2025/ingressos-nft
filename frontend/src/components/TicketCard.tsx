@@ -90,7 +90,7 @@ const TicketCard: React.FC<TicketCardProps> = ({
             <span className="mr-2">📍</span>
             <span className="truncate">{ticket.eventVenue}</span>
           </div>
-          
+
           <div className="flex items-center text-sm text-gray-600">
             <span className="mr-2">📅</span>
             <span>{formatDateTime(ticket.eventDate)}</span>
@@ -131,7 +131,7 @@ const TicketCard: React.FC<TicketCardProps> = ({
             >
               View Details
             </button>
-            
+
             {!isEventPast && !isEventCancelled && (
               <button
                 onClick={(e) => {

@@ -108,23 +108,23 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
               title={isExpanded ? 'Collapse' : 'Expand'}
             >
-              <svg 
-                className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
+
             {events.length > 0 && (
               <button
                 onClick={clearEvents}
@@ -182,12 +182,12 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                   <div className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-sm ${getEventColor(event.type)}`}>
                     {getEventIcon(event.type)}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900 mb-1">
                       {formatEventDescription(event)}
                     </p>
-                    
+
                     <div className="flex items-center gap-4 text-xs text-gray-500">
                       <span>{formatTimeAgo(event.timestamp)}</span>
                       <span>Block #{event.blockNumber}</span>

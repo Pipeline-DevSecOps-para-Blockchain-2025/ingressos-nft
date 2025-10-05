@@ -76,9 +76,9 @@ export const EventCardSkeleton: React.FC = () => (
       </div>
       <SkeletonLoader variant="rectangular" width={60} height={24} />
     </div>
-    
+
     <SkeletonLoader variant="text" lines={2} className="mb-4" />
-    
+
     <div className="flex items-center justify-between">
       <SkeletonLoader variant="text" width="30%" />
       <SkeletonLoader variant="rectangular" width={80} height={32} />
@@ -92,9 +92,9 @@ export const TicketCardSkeleton: React.FC = () => (
       <SkeletonLoader variant="text" width="50%" />
       <SkeletonLoader variant="circular" width={40} height={40} />
     </div>
-    
+
     <SkeletonLoader variant="text" lines={3} className="mb-4" />
-    
+
     <div className="flex items-center justify-between">
       <SkeletonLoader variant="text" width="40%" />
       <SkeletonLoader variant="rectangular" width={100} height={32} />
@@ -102,9 +102,9 @@ export const TicketCardSkeleton: React.FC = () => (
   </div>
 )
 
-export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({ 
-  rows = 5, 
-  columns = 4 
+export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
+  rows = 5,
+  columns = 4
 }) => (
   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
     {/* Header */}
@@ -115,7 +115,7 @@ export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
         ))}
       </div>
     </div>
-    
+
     {/* Rows */}
     {Array.from({ length: rows }).map((_, rowIndex) => (
       <div key={rowIndex} className="border-b border-gray-100 p-4 last:border-b-0">

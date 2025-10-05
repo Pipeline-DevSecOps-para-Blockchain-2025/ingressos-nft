@@ -96,7 +96,7 @@ describe('TicketCard', () => {
     render(<TicketCard ticket={mockTicket} onClick={mockOnClick} />)
 
     fireEvent.click(screen.getByText('View Details'))
-    
+
     // onClick should be called once (from the details button)
     expect(mockOnClick).toHaveBeenCalledTimes(1)
     expect(mockOnClick).toHaveBeenCalledWith(mockTicket)
@@ -105,16 +105,16 @@ describe('TicketCard', () => {
   it('should handle transfer button click without triggering card click', () => {
     const mockOnClick = vi.fn()
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    
+
     render(<TicketCard ticket={mockTicket} onClick={mockOnClick} />)
 
     fireEvent.click(screen.getByText('Transfer'))
-    
+
     // Card onClick should not be called when transfer button is clicked
     expect(mockOnClick).not.toHaveBeenCalled()
     // Transfer functionality should log (placeholder implementation)
     expect(consoleSpy).toHaveBeenCalledWith('Transfer ticket:', 1)
-    
+
     consoleSpy.mockRestore()
   })
 
@@ -127,7 +127,7 @@ describe('TicketCard', () => {
 
   it('should show correct status colors', () => {
     const { rerender } = render(<TicketCard ticket={mockTicket} />)
-    
+
     // Active status (green)
     expect(screen.getByText('Active')).toHaveClass('text-green-800')
 

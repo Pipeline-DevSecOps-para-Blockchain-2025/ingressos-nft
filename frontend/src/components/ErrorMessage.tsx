@@ -79,18 +79,18 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({
         <div className={`flex-shrink-0 mr-3 ${styles.icon}`}>
           {getIcon()}
         </div>
-        
+
         <div className="flex-1 min-w-0">
           {title && (
             <h3 className={`font-medium mb-1 ${styles.title}`}>
               {title}
             </h3>
           )}
-          
+
           <p className={`text-sm ${styles.message}`}>
             {message}
           </p>
-          
+
           {onRetry && (
             <button
               onClick={onRetry}
@@ -100,7 +100,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({
             </button>
           )}
         </div>
-        
+
         {onDismiss && (
           <button
             onClick={onDismiss}

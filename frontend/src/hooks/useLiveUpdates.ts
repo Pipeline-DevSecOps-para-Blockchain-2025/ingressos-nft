@@ -30,7 +30,7 @@ export const useLiveUpdates = (
 
   const { events: contractEvents, isListening, startListening, stopListening } = useContractEvents()
   const { addSuccess, addInfo, addWarning } = useNotifications()
-  
+
   const [isLive, setIsLive] = useState(false)
   const [lastUpdate, setLastUpdate] = useState<number | null>(null)
   const [refreshTimer, setRefreshTimer] = useState<NodeJS.Timeout | null>(null)
@@ -63,14 +63,14 @@ export const useLiveUpdates = (
             }
           )
           break
-          
+
         case 'TicketPurchased':
           addSuccess(
             'Ticket Sale',
             `Ticket #${latestEvent.data.ticketNumber} sold for ${formatEther(latestEvent.data.price)} ETH`
           )
           break
-          
+
         case 'EventStatusChanged':
           const statusNames = ['Active', 'Paused', 'Cancelled', 'Completed']
           const newStatus = statusNames[latestEvent.data.newStatus] || 'Unknown'
@@ -79,7 +79,7 @@ export const useLiveUpdates = (
             `Event #${latestEvent.data.eventId} is now ${newStatus}`
           )
           break
-          
+
         case 'RevenueWithdrawn':
           addSuccess(
             'Revenue Withdrawal',

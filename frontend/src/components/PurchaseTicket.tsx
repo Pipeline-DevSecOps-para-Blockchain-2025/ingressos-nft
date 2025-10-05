@@ -149,7 +149,7 @@ const PurchaseTicket: React.FC<PurchaseTicketProps> = ({
           <p className="text-gray-600 mb-4">
             Your ticket has been minted successfully
           </p>
-          
+
           {transaction.hash && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-green-800 mb-2">Transaction Hash:</p>
@@ -210,7 +210,7 @@ const PurchaseTicket: React.FC<PurchaseTicketProps> = ({
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
             Processing Purchase
           </h2>
-          
+
           <div className={`inline-flex items-center px-4 py-2 rounded-lg border mb-4 ${statusColorClasses[statusColor]}`}>
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
             {getStatusMessage()}
@@ -272,7 +272,7 @@ const PurchaseTicket: React.FC<PurchaseTicketProps> = ({
             <span className="text-gray-600">Ticket Price:</span>
             <span className="font-medium">{ticketPrice} ETH</span>
           </div>
-          
+
           {isEstimatingGas ? (
             <div className="flex justify-between">
               <span className="text-gray-600">Gas Fee:</span>
@@ -337,7 +337,7 @@ const PurchaseTicket: React.FC<PurchaseTicketProps> = ({
         >
           {isExecuting ? 'Processing...' : 'Confirm Purchase'}
         </button>
-        
+
         <button
           onClick={handleCancel}
           disabled={isExecuting}

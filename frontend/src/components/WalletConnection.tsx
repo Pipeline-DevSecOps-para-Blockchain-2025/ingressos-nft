@@ -6,9 +6,9 @@ interface WalletConnectionProps {
   showNetworkInfo?: boolean
 }
 
-const WalletConnection: React.FC<WalletConnectionProps> = ({ 
+const WalletConnection: React.FC<WalletConnectionProps> = ({
   className = '',
-  showNetworkInfo = true 
+  showNetworkInfo = true
 }) => {
   const [showConnectors, setShowConnectors] = useState(false)
   const {
@@ -53,7 +53,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             <span className="font-medium">{formatAddress()}</span>
           </div>
-          
+
           <button
             onClick={disconnect}
             className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -61,12 +61,12 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({
             Disconnect
           </button>
         </div>
-        
+
         {showNetworkInfo && (
           <div className="flex items-center gap-2">
             <div className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm ${
-              isCorrectNetwork 
-                ? 'bg-blue-50 text-blue-700' 
+              isCorrectNetwork
+                ? 'bg-blue-50 text-blue-700'
                 : 'bg-red-50 text-red-700'
             }`}>
               <div className={`w-2 h-2 rounded-full ${
@@ -74,7 +74,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({
               }`}></div>
               <span>{getNetworkName(chainId)}</span>
             </div>
-            
+
             {!isCorrectNetwork && (
               <button
                 onClick={handleSwitchNetwork}
@@ -110,7 +110,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({
               ✕
             </button>
           </div>
-          
+
           <div className="space-y-2">
             {connectors.map((connector) => (
               <button
@@ -120,8 +120,8 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({
                 className="w-full flex items-center gap-3 p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {connector.icon && (
-                  <img 
-                    src={connector.icon} 
+                  <img
+                    src={connector.icon}
                     alt={connector.name}
                     className="w-6 h-6"
                   />
@@ -130,7 +130,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({
               </button>
             ))}
           </div>
-          
+
           <div className="mt-4 pt-3 border-t border-gray-200">
             <p className="text-xs text-gray-500">
               By connecting, you agree to our Terms of Service and Privacy Policy.

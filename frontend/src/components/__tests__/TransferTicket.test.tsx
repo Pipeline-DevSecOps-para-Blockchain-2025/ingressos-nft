@@ -174,7 +174,7 @@ describe('TransferTicket', () => {
     render(<TransferTicket ticket={mockTicket} />)
 
     const addressInput = screen.getByLabelText('Recipient Address *')
-    
+
     fireEvent.change(addressInput, { target: { value: '0xtest' } })
     expect(addressInput).toHaveValue('0xtest')
 
@@ -187,7 +187,7 @@ describe('TransferTicket', () => {
       address: null,
       isConnected: false,
     }))
-    
+
     vi.doMock('../../hooks/useWallet', () => ({
       useWallet: mockUseWallet,
     }))

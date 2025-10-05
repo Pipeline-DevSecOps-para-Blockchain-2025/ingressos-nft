@@ -36,14 +36,14 @@ const LiveSupplyIndicator: React.FC<LiveSupplyIndicatorProps> = ({
   // Simulate supply updates (in a real app, this would query the contract)
   const refreshSupply = async () => {
     setIsUpdating(true)
-    
+
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 500))
-      
+
       // In a real app, you would call the contract here
       // const newSupply = await contract.getEventCurrentSupply(eventId)
-      
+
       // For demo purposes, occasionally simulate a supply change
       const shouldUpdate = Math.random() < 0.1 // 10% chance of update
       if (shouldUpdate && displaySupply < maxSupply) {
@@ -86,12 +86,12 @@ const LiveSupplyIndicator: React.FC<LiveSupplyIndicatorProps> = ({
 
   const formatLastUpdate = () => {
     if (!lastUpdateTime) return null
-    
+
     const now = Date.now()
     const diff = now - lastUpdateTime
     const seconds = Math.floor(diff / 1000)
     const minutes = Math.floor(seconds / 60)
-    
+
     if (minutes > 0) return `${minutes}m ago`
     if (seconds > 0) return `${seconds}s ago`
     return 'Just now'
@@ -109,7 +109,7 @@ const LiveSupplyIndicator: React.FC<LiveSupplyIndicatorProps> = ({
             </div>
           )}
         </div>
-        
+
         {isUpdating && (
           <div className="text-blue-600">
             <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@ const LiveSupplyIndicator: React.FC<LiveSupplyIndicatorProps> = ({
 
       {/* Progress Bar */}
       <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-        <div 
+        <div
           className={`h-2 rounded-full transition-all duration-500 ${getProgressColor()}`}
           style={{ width: `${Math.min(soldPercentage, 100)}%` }}
         ></div>

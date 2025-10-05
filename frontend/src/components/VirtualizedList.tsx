@@ -21,7 +21,7 @@ function VirtualizedList<T>({
   onScroll
 }: VirtualizedListProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null)
-  
+
   const {
     visibleItems,
     totalHeight,

@@ -9,12 +9,12 @@ interface EventListProps {
 }
 
 const EventList: React.FC<EventListProps> = ({ onEventClick, className = '' }) => {
-  const { 
-    filteredEvents, 
-    isLoading, 
-    error, 
-    hasNextPage, 
-    isFetchingNextPage, 
+  const {
+    filteredEvents,
+    isLoading,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
     fetchNextPage,
     filters,
     setFilters,
@@ -31,13 +31,13 @@ const EventList: React.FC<EventListProps> = ({ onEventClick, className = '' }) =
   // Handle status filter
   const handleStatusFilter = (status: number, checked: boolean) => {
     const currentStatus = filters.status || []
-    const newStatus = checked 
+    const newStatus = checked
       ? [...currentStatus, status]
       : currentStatus.filter(s => s !== status)
-    
-    setFilters({ 
-      ...filters, 
-      status: newStatus.length > 0 ? newStatus : undefined 
+
+    setFilters({
+      ...filters,
+      status: newStatus.length > 0 ? newStatus : undefined
     })
   }
 
@@ -82,7 +82,7 @@ const EventList: React.FC<EventListProps> = ({ onEventClick, className = '' }) =
               {isLoading ? 'Loading...' : `${filteredEvents.length} of ${totalEvents} events`}
             </p>
           </div>
-          
+
           <div className="flex gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}

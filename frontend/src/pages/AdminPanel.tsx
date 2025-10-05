@@ -11,7 +11,7 @@ const AdminPanel: React.FC = () => {
   const { isConnected } = useWallet()
   const { isAdmin, isLoading: adminLoading } = useAdminRole()
   const { isOrganizer, isLoading: organizerLoading } = useOrganizerRole()
-  
+
   const roleLoading = adminLoading || organizerLoading
   const hasAccess = isAdmin || isOrganizer
   const [activeTab, setActiveTab] = useState<'overview' | 'roles' | 'activity'>('overview')
@@ -128,7 +128,7 @@ const AdminPanel: React.FC = () => {
                 Real-time monitoring of platform activity and recent transactions.
               </p>
             </div>
-            
+
             {/* Activity Feed */}
             <ActivityFeed maxItems={50} showFilters={true} />
           </div>
@@ -142,7 +142,7 @@ const AdminPanel: React.FC = () => {
                 {isAdmin ? 'Administrator Privileges' : 'Organizer Privileges'}
               </h3>
               <p className="text-purple-100">
-                {isAdmin 
+                {isAdmin
                   ? 'You have full administrative access to manage the platform, grant roles, and monitor all activities.'
                   : 'You have organizer access to create events, manage tickets, and view platform statistics.'
                 }

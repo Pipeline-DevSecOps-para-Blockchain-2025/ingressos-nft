@@ -79,7 +79,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <div className="flex-shrink-0 mr-3 mt-0.5">
               {getNotificationIcon(notification.type)}
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -93,7 +93,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     {formatTimeAgo(notification.timestamp)}
                   </p>
                 </div>
-                
+
                 <button
                   onClick={() => removeNotification(notification.id)}
                   className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"

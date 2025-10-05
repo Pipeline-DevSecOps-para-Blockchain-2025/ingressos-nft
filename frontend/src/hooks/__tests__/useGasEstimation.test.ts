@@ -154,7 +154,7 @@ describe('useGasEstimation', () => {
 
     // After estimation completes, should not be loading
     expect(result.current.isEstimating).toBe(false)
-    
+
     // Verify that an estimate was produced (indicating the function ran successfully)
     expect(result.current.gasEstimate).toBeDefined()
     expect(result.current.gasEstimate?.gasLimit).toBe(BigInt(150000))

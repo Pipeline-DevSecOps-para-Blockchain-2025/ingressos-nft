@@ -31,16 +31,16 @@ export interface UseUserTicketsReturn {
 export const useUserTickets = (): UseUserTicketsReturn => {
   const { address, isConnected } = useWallet()
   const { contractAddress, isContractReady, getTicketInfo, getEventDetails, balanceOf } = useIngressosContract()
-  
+
   const [tickets, setTickets] = useState<TicketMetadata[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
   // Get user's NFT balance
-  const { 
-    data: balance, 
+  const {
+    data: balance,
     isLoading: isBalanceLoading,
-    refetch: refetchBalance 
+    refetch: refetchBalance
   } = useReadContract({
     ...contractAddress ? {
       address: contractAddress,
@@ -82,7 +82,7 @@ export const useUserTickets = (): UseUserTicketsReturn => {
       }
 
       const allTickets = await Promise.all(ticketPromises)
-      const userTickets = allTickets.filter((ticket): ticket is TicketMetadata => 
+      const userTickets = allTickets.filter((ticket): ticket is TicketMetadata =>
         ticket !== null && ticket.currentOwner.toLowerCase() === address.toLowerCase()
       )
 

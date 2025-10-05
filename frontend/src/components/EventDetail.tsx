@@ -13,11 +13,11 @@ interface EventDetailProps {
   className?: string
 }
 
-const EventDetail: React.FC<EventDetailProps> = ({ 
-  event, 
-  onClose, 
+const EventDetail: React.FC<EventDetailProps> = ({
+  event,
+  onClose,
   onPurchaseTicket,
-  className = '' 
+  className = ''
 }) => {
   const { getEventStatusName } = useIngressosContract()
   const { isConnected } = useWallet()
@@ -93,7 +93,7 @@ const EventDetail: React.FC<EventDetailProps> = ({
               <div className="text-lg opacity-90">Event #{event.eventId}</div>
             </div>
           </div>
-          
+
           {/* Close Button */}
           {onClose && (
             <button
@@ -223,7 +223,7 @@ const EventDetail: React.FC<EventDetailProps> = ({
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-              <div 
+              <div
                 className={`h-3 rounded-full transition-all duration-300 ${
                   isSoldOut ? 'bg-red-500' : soldPercentage > 80 ? 'bg-yellow-500' : 'bg-green-500'
                 }`}
@@ -268,14 +268,14 @@ const EventDetail: React.FC<EventDetailProps> = ({
                 </div>
                 <div className="text-sm text-gray-600">per ticket</div>
               </div>
-              
+
               <button
                 onClick={handlePurchaseClick}
                 className="w-full md:w-auto px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg"
               >
                 Purchase Ticket
               </button>
-              
+
               <div className="mt-3 text-xs text-gray-500">
                 You will be prompted to confirm the transaction in your wallet
               </div>

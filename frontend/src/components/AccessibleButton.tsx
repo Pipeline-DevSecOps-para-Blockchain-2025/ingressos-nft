@@ -26,7 +26,7 @@ const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonProps>(({
 }, ref) => {
   const getVariantClasses = () => {
     const baseClasses = 'font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2'
-    
+
     switch (variant) {
       case 'primary':
         return `${baseClasses} bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600`

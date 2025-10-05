@@ -31,11 +31,11 @@ const NetworkSwitcher: React.FC<NetworkSwitcherProps> = ({ className = '' }) => 
         <div className="w-3 h-3 bg-red-500 rounded-full"></div>
         <span className="text-sm font-medium text-red-800">Unsupported Network</span>
       </div>
-      
+
       <p className="text-sm text-red-700 mb-3">
         Please switch to a supported network to use this application.
       </p>
-      
+
       <div className="space-y-2">
         {networks.map((network) => (
           <button

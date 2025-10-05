@@ -20,12 +20,12 @@ export const useOptimisticUpdate = <T, P = any>(
   options: OptimisticUpdateOptions<P> = {}
 ): UseOptimisticUpdateReturn<T, P> => {
   const { onSuccess, onError, rollbackDelay = 0 } = options
-  
+
   const [data, setData] = useState<T>(initialData)
   const [isOptimistic, setIsOptimistic] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  
+
   const originalDataRef = useRef<T>(initialData)
   const rollbackTimeoutRef = useRef<NodeJS.Timeout>()
 
@@ -40,7 +40,7 @@ export const useOptimisticUpdate = <T, P = any>(
 
     // Store original data for potential rollback
     originalDataRef.current = data
-    
+
     // Apply optimistic update
     setData(optimisticData)
     setIsOptimistic(true)
@@ -49,16 +49,16 @@ export const useOptimisticUpdate = <T, P = any>(
 
     try {
       const result = await asyncFn()
-      
+
       // Success - keep optimistic data or update with server response
       setIsOptimistic(false)
       setIsLoading(false)
       onSuccess?.(result)
-      
+
       return result
     } catch (err) {
       const error = err as Error
-      
+
       // Error - rollback to original data
       const rollback = () => {
         setData(originalDataRef.current)
@@ -73,7 +73,7 @@ export const useOptimisticUpdate = <T, P = any>(
       } else {
         rollback()
       }
-      
+
       return null
     }
   }, [data, onSuccess, onError, rollbackDelay])
@@ -82,7 +82,7 @@ export const useOptimisticUpdate = <T, P = any>(
     if (rollbackTimeoutRef.current) {
       clearTimeout(rollbackTimeoutRef.current)
     }
-    
+
     setData(initialData)
     setIsOptimistic(false)
     setIsLoading(false)

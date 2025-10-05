@@ -29,7 +29,7 @@ export const useGasEstimation = (): UseGasEstimationReturn => {
   const [gasEstimate, setGasEstimate] = useState<GasEstimate | null>(null)
   const [isEstimating, setIsEstimating] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  
+
   const publicClient = usePublicClient()
   const { address } = useWallet()
   const { contractAddress, formatPrice } = useIngressosContract()
@@ -50,7 +50,7 @@ export const useGasEstimation = (): UseGasEstimationReturn => {
     try {
       // Get current gas price
       const gasPrice = await publicClient.getGasPrice()
-      
+
       // Check if the network supports EIP-1559
       let maxFeePerGas: bigint | undefined
       let maxPriorityFeePerGas: bigint | undefined

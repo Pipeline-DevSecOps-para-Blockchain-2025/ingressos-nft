@@ -24,7 +24,7 @@ export interface UseContractEventsReturn {
 export const useContractEvents = (): UseContractEventsReturn => {
   const { contractAddress, isContractReady } = useIngressosContract()
   const publicClient = usePublicClient()
-  
+
   const [events, setEvents] = useState<ContractEvent[]>([])
   const [isListening, setIsListening] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -172,7 +172,7 @@ export const useContractEvents = (): UseContractEventsReturn => {
     if (isContractReady) {
       startListening()
     }
-    
+
     return () => {
       stopListening()
     }

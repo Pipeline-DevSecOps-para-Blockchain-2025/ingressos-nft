@@ -665,22 +665,22 @@ contract Ingressos is ERC721, AccessControl {
 
     function getTicketOwnershipHistory(uint256 tokenId) external view returns (address originalBuyer, address currentOwner) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
-        
+
         TicketInfo memory ticket = tickets[tokenId];
         return (ticket.originalBuyer, _ownerOf(tokenId));
     }
 
     function getTicketTransferCount(uint256 tokenId) external view returns (uint256) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
-        
+
         TicketInfo memory ticket = tickets[tokenId];
         address currentOwner = _ownerOf(tokenId);
-        
+
         // If current owner is the original buyer, no transfers have occurred
         if (currentOwner == ticket.originalBuyer) {
             return 0;
         }
-        
+
         // For simplicity, we return 1 if transferred (could be enhanced to track exact count)
         return 1;
     }

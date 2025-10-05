@@ -84,7 +84,7 @@ const TransferTicket: React.FC<TransferTicketProps> = ({
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.trim()
     setRecipientAddress(value)
-    
+
     if (value) {
       validateAddress(value)
     } else {
@@ -154,7 +154,7 @@ const TransferTicket: React.FC<TransferTicketProps> = ({
           <p className="text-gray-600 mb-4">
             Your ticket has been transferred successfully
           </p>
-          
+
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
             <div className="text-sm text-green-800 space-y-2">
               <div>
@@ -228,7 +228,7 @@ const TransferTicket: React.FC<TransferTicketProps> = ({
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
             Processing Transfer
           </h2>
-          
+
           <div className={`inline-flex items-center px-4 py-2 rounded-lg border mb-4 ${statusColorClasses[statusColor]}`}>
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
             {getStatusMessage()}
@@ -331,7 +331,7 @@ const TransferTicket: React.FC<TransferTicketProps> = ({
           >
             {isExecuting ? 'Processing...' : 'Confirm Transfer'}
           </button>
-          
+
           <button
             onClick={handleBack}
             disabled={isExecuting}
@@ -407,7 +407,7 @@ const TransferTicket: React.FC<TransferTicketProps> = ({
         >
           Continue
         </button>
-        
+
         <button
           onClick={handleCancel}
           className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"

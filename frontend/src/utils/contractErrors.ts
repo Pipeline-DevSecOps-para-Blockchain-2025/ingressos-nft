@@ -10,7 +10,7 @@ export interface ContractError {
 // Known contract errors from the Ingressos contract
 export const CONTRACT_ERRORS = {
   EventNotFound: 'EventNotFound',
-  EventSoldOut: 'EventSoldOut', 
+  EventSoldOut: 'EventSoldOut',
   EventNotActive: 'EventNotActive',
   InsufficientPayment: 'InsufficientPayment',
   UnauthorizedOrganizer: 'UnauthorizedOrganizer',
@@ -27,7 +27,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   [CONTRACT_ERRORS.UnauthorizedOrganizer]: 'You are not authorized to perform this action. Organizer role required.',
   [CONTRACT_ERRORS.NoFundsToWithdraw]: 'No funds available to withdraw for this event.',
   [CONTRACT_ERRORS.RefundFailed]: 'Refund transaction failed. Please try again.',
-  
+
   // Common wallet/network errors
   'User rejected the request': 'Transaction was cancelled by user.',
   'insufficient funds': 'Insufficient funds in your wallet.',
@@ -43,7 +43,7 @@ export const parseContractError = (error: any): ContractError => {
   let errorName = 'Unknown'
   let errorMessage = 'An unknown error occurred'
   let userMessage = 'Something went wrong. Please try again.'
-  
+
   try {
     // Handle different error formats
     if (error?.cause?.reason) {
@@ -55,7 +55,7 @@ export const parseContractError = (error: any): ContractError => {
     } else if (typeof error === 'string') {
       errorMessage = error
     }
-    
+
     // Extract error name from revert reason
     if (errorMessage.includes('revert')) {
       const revertMatch = errorMessage.match(/revert (.+?)(?:\(|$)/)
@@ -63,7 +63,7 @@ export const parseContractError = (error: any): ContractError => {
         errorName = revertMatch[1].trim()
       }
     }
-    
+
     // Check for known contract errors
     for (const [, value] of Object.entries(CONTRACT_ERRORS)) {
       if (errorMessage.includes(value) || errorName.includes(value)) {
@@ -71,10 +71,10 @@ export const parseContractError = (error: any): ContractError => {
         break
       }
     }
-    
+
     // Get user-friendly message
     userMessage = ERROR_MESSAGES[errorName] || ERROR_MESSAGES[errorMessage] || userMessage
-    
+
     // Handle specific error patterns
     if (errorMessage.toLowerCase().includes('user rejected')) {
       userMessage = ERROR_MESSAGES['User rejected the request']
@@ -83,11 +83,11 @@ export const parseContractError = (error: any): ContractError => {
     } else if (errorMessage.toLowerCase().includes('gas')) {
       userMessage = ERROR_MESSAGES['gas required exceeds allowance']
     }
-    
+
   } catch (parseError) {
     console.error('Error parsing contract error:', parseError)
   }
-  
+
   return {
     name: errorName,
     message: errorMessage,
@@ -131,14 +131,14 @@ export const getErrorSeverity = (error: any): 'low' | 'medium' | 'high' => {
   if (isUserRejectedError(error)) {
     return 'low' // User intentionally cancelled
   }
-  
+
   if (isNetworkError(error)) {
     return 'medium' // Network issues, might be temporary
   }
-  
+
   if (isInsufficientFundsError(error)) {
     return 'medium' // User needs to add funds
   }
-  
+
   return 'high' // Contract errors, unexpected issues
 }

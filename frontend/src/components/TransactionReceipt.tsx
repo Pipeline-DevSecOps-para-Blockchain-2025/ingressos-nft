@@ -146,21 +146,21 @@ const TransactionReceipt: React.FC<TransactionReceiptProps> = ({
               <span className="text-gray-600">Ticket Price:</span>
               <span className="font-medium">{ticketPrice} ETH</span>
             </div>
-            
+
             {totalGasCost && (
               <div className="flex justify-between">
                 <span className="text-gray-600">Gas Fee:</span>
                 <span>{formatEther(totalGasCost)} ETH</span>
               </div>
             )}
-            
+
             {gasUsed && (
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Gas Used:</span>
                 <span>{gasUsed.toLocaleString()}</span>
               </div>
             )}
-            
+
             {gasPrice && (
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Gas Price:</span>
@@ -201,7 +201,7 @@ const TransactionReceipt: React.FC<TransactionReceiptProps> = ({
           >
             View My Tickets
           </button>
-          
+
           <button
             onClick={() => {
               // Open blockchain explorer

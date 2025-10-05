@@ -114,7 +114,7 @@ describe('EventCard', () => {
     render(<EventCard event={mockEvent} onClick={mockOnClick} />)
 
     fireEvent.click(screen.getByText('Details'))
-    
+
     // Card onClick should not be called when details button is clicked
     expect(mockOnClick).not.toHaveBeenCalled()
   })
@@ -124,7 +124,7 @@ describe('EventCard', () => {
     render(<EventCard event={mockEvent} onClick={mockOnClick} />)
 
     fireEvent.click(screen.getByText('Buy Ticket'))
-    
+
     // Card onClick should not be called when buy button is clicked
     expect(mockOnClick).not.toHaveBeenCalled()
   })

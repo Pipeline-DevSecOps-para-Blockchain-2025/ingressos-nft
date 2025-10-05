@@ -69,7 +69,7 @@ describe('useIngressosContract', () => {
 
   it('should call createEvent with correct parameters', async () => {
     mockWriteContractAsync.mockResolvedValue('0xhash123')
-    
+
     const { result } = renderHook(() => useIngressosContract())
 
     const eventParams = {
@@ -100,7 +100,7 @@ describe('useIngressosContract', () => {
 
   it('should call purchaseTicket with correct parameters', async () => {
     mockWriteContractAsync.mockResolvedValue('0xhash123')
-    
+
     const { result } = renderHook(() => useIngressosContract())
 
     await result.current.purchaseTicket(1, '0.1')
@@ -118,7 +118,7 @@ describe('useIngressosContract', () => {
     // Mock unsupported chain
     const { useChainId } = await import('wagmi')
     vi.mocked(useChainId).mockReturnValue(999)
-    
+
     const { result } = renderHook(() => useIngressosContract())
 
     expect(result.current.isContractReady).toBe(false)
@@ -137,9 +137,9 @@ describe('useIngressosContract', () => {
     // Ensure we're on a supported chain
     const { useChainId } = await import('wagmi')
     vi.mocked(useChainId).mockReturnValue(31337)
-    
+
     mockWriteContractAsync.mockResolvedValue('0xhash123')
-    
+
     const { result } = renderHook(() => useIngressosContract())
     const testAddress = '0x1234567890123456789012345678901234567890'
 

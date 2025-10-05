@@ -13,7 +13,7 @@ const useUserStore = create<UserStore>((set) => ({
   isAdmin: false,
   balance: 0n,
   tickets: [],
-  
+
   setUser: (user) => set((state) => ({ ...state, ...user })),
   clearUser: () => set({
     address: null,

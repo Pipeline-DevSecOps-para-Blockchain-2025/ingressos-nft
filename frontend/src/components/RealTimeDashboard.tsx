@@ -22,7 +22,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
 }) => {
   const { events, refetch } = useEvents()
   const [refreshCount, setRefreshCount] = useState(0)
-  
+
   const { isLive, lastUpdate, eventCount, startLiveUpdates, stopLiveUpdates, refreshData } = useLiveUpdates(
     {
       enableNotifications: false, // Notifications are handled at the app level
@@ -37,12 +37,12 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
 
   const formatLastUpdate = () => {
     if (!lastUpdate) return 'Never'
-    
+
     const now = Date.now()
     const diff = now - lastUpdate
     const minutes = Math.floor(diff / 60000)
     const seconds = Math.floor((diff % 60000) / 1000)
-    
+
     if (minutes > 0) return `${minutes}m ${seconds}s ago`
     return `${seconds}s ago`
   }
@@ -72,7 +72,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
             )}
           </div>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-gray-600">Events Tracked</p>
@@ -102,7 +102,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                 </div>
               )}
             </div>
-            
+
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Active Events</span>
@@ -150,13 +150,13 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
               Live updates and monitoring for platform activity
             </p>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="text-right text-sm">
               <p className="text-gray-600">Last Update</p>
               <p className="font-medium">{formatLastUpdate()}</p>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {isLive ? (
                 <button
@@ -173,7 +173,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                   Start Live Updates
                 </button>
               )}
-              
+
               <button
                 onClick={refreshData}
                 className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -199,7 +199,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-center">
                 <div className="text-2xl mr-3">🎫</div>
@@ -209,7 +209,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-purple-50 rounded-lg p-4">
               <div className="flex items-center">
                 <div className="text-2xl mr-3">💰</div>
@@ -219,7 +219,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-orange-50 rounded-lg p-4">
               <div className="flex items-center">
                 <div className="text-2xl mr-3">📡</div>
@@ -253,7 +253,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                 maxSupply={Number(event.maxSupply)}
               />
             ))}
-            
+
             {activeEvents.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <div className="text-4xl mb-2">📊</div>

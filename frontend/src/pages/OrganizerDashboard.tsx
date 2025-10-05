@@ -10,16 +10,16 @@ import { formatEther } from '../utils'
 const OrganizerDashboard: React.FC = () => {
   const { isConnected } = useWallet()
   const { isOrganizer, isLoading: roleLoading } = useOrganizerRole()
-  const { 
-    events, 
-    isLoading: eventsLoading, 
-    error, 
-    refetch, 
-    createEvent, 
-    updateEventStatus, 
-    withdrawRevenue 
+  const {
+    events,
+    isLoading: eventsLoading,
+    error,
+    refetch,
+    createEvent,
+    updateEventStatus,
+    withdrawRevenue
   } = useOrganizerEvents()
-  
+
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'create'>('overview')
   const [isCreatingEvent, setIsCreatingEvent] = useState(false)
 

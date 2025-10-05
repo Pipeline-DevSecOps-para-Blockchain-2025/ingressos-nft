@@ -12,11 +12,11 @@ interface EventStore {
 const useEventStore = create<EventStore>((set) => ({
   events: [],
   selectedEvent: null,
-  
+
   setEvents: (events) => set({ events }),
   setSelectedEvent: (event) => set({ selectedEvent: event }),
   updateEvent: (eventId, updates) => set((state) => ({
-    events: state.events.map(event => 
+    events: state.events.map(event =>
       event.eventId === eventId ? { ...event, ...updates } : event
     ),
   })),

@@ -57,7 +57,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -247,7 +247,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({
           >
             {isLoading ? 'Creating Event...' : 'Create Event'}
           </button>
-          
+
           {onCancel && (
             <button
               type="button"

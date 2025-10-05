@@ -188,7 +188,7 @@ describe('TicketDetailModal', () => {
 
   it('should handle copy functionality for token ID', async () => {
     const { copyToClipboard } = await import('../../utils')
-    
+
     render(
       <TicketDetailModal
         isOpen={true}
@@ -205,7 +205,7 @@ describe('TicketDetailModal', () => {
 
   it('should handle copy functionality for addresses', async () => {
     const { copyToClipboard } = await import('../../utils')
-    
+
     render(
       <TicketDetailModal
         isOpen={true}
@@ -228,7 +228,7 @@ describe('TicketDetailModal', () => {
         onClose={vi.fn()}
       />
     )
-    
+
     // Active status (green) - use getAllByText since there are multiple "Active" elements
     expect(screen.getAllByText('Active')[0]).toHaveClass('text-green-800')
 

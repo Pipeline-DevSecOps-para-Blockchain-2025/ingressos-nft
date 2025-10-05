@@ -23,47 +23,47 @@ export const useErrorHandler = (): UseErrorHandlerReturn => {
     if (error instanceof Error) {
       return error.message
     }
-    
+
     if (typeof error === 'string') {
       return error
     }
-    
+
     if (error && typeof error === 'object' && 'message' in error) {
       return String((error as any).message)
     }
-    
+
     return 'An unexpected error occurred'
   }, [])
 
   const getContextualMessage = useCallback((error: unknown, context?: string): string => {
     const baseMessage = getErrorMessage(error)
-    
+
     // Handle common Web3/blockchain errors
     if (baseMessage.includes('user rejected')) {
       return 'Transaction was cancelled by user'
     }
-    
+
     if (baseMessage.includes('insufficient funds')) {
       return 'Insufficient funds to complete transaction'
     }
-    
+
     if (baseMessage.includes('gas')) {
       return 'Transaction failed due to gas issues. Please try again with higher gas limit.'
     }
-    
+
     if (baseMessage.includes('network')) {
       return 'Network error. Please check your connection and try again.'
     }
-    
+
     if (baseMessage.includes('contract')) {
       return 'Smart contract error. Please try again later.'
     }
-    
+
     // Add context if provided
     if (context) {
       return `${context}: ${baseMessage}`
     }
-    
+
     return baseMessage
   }, [getErrorMessage])
 

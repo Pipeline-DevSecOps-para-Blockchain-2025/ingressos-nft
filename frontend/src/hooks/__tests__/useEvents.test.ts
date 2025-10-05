@@ -114,8 +114,8 @@ describe('useEvents', () => {
     const { result } = renderHook(() => useEvents())
 
     act(() => {
-      result.current.setFilters({ 
-        priceRange: { min: 0.15, max: 0.25 } 
+      result.current.setFilters({
+        priceRange: { min: 0.15, max: 0.25 }
       })
     })
 
@@ -127,8 +127,8 @@ describe('useEvents', () => {
     const { result } = renderHook(() => useEvents())
 
     act(() => {
-      result.current.setFilters({ 
-        organizer: '0x1234567890123456789012345678901234567890' 
+      result.current.setFilters({
+        organizer: '0x1234567890123456789012345678901234567890'
       })
     })
 
@@ -139,7 +139,7 @@ describe('useEvents', () => {
     const { result } = renderHook(() => useEvents())
 
     const eventQuery = result.current.getEvent(1)
-    
+
     expect(eventQuery.data).toBeDefined()
     expect(eventQuery.data?.eventId).toBe(1)
     expect(eventQuery.data?.name).toBe('Test Event 1')
@@ -149,7 +149,7 @@ describe('useEvents', () => {
     const { result } = renderHook(() => useEvents())
 
     const eventQuery = result.current.getEvent(999)
-    
+
     expect(eventQuery.data).toBeUndefined()
   })
 
@@ -157,7 +157,7 @@ describe('useEvents', () => {
     const { result } = renderHook(() => useEvents())
 
     act(() => {
-      result.current.setFilters({ 
+      result.current.setFilters({
         search: 'Test',
         status: [0],
         priceRange: { min: 0, max: 1 }

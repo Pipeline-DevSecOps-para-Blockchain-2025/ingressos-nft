@@ -24,7 +24,7 @@ vi.mock('../../hooks/useWallet', () => ({
 describe('WalletConnection', () => {
   it('should render connect button when not connected', () => {
     render(<WalletConnection />)
-    
+
     expect(screen.getByText('Connect Wallet')).toBeInTheDocument()
   })
 

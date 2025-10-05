@@ -9,19 +9,19 @@ export interface UseWalletReturn {
   isConnected: boolean
   isConnecting: boolean
   isReconnecting: boolean
-  
+
   // Chain information
   chainId: number
   isCorrectNetwork: boolean
-  
+
   // Connection methods
   connect: (connectorId?: string) => void
   disconnect: () => void
   switchNetwork: (chainId: number) => void
-  
+
   // Utility methods
   formatAddress: (address?: string) => string
-  
+
   // Available connectors
   connectors: Array<{
     id: string
@@ -39,12 +39,12 @@ export const useWallet = (): UseWalletReturn => {
   const { disconnect: wagmiDisconnect } = useDisconnect()
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
-  
+
   const { setUser, clearUser } = useUserStore()
-  
+
   // Check if current network is supported
   const isCorrectNetwork = SUPPORTED_CHAIN_IDS.includes(chainId)
-  
+
   // Update user store when wallet state changes
   useEffect(() => {
     if (isConnected && address) {
@@ -59,62 +59,62 @@ export const useWallet = (): UseWalletReturn => {
       clearUser()
     }
   }, [isConnected, address, setUser, clearUser])
-  
+
   // Connect to wallet
   const connect = useCallback((connectorId?: string) => {
-    const connector = connectorId 
+    const connector = connectorId
       ? connectors.find(c => c.id === connectorId)
       : connectors[0] // Default to first available connector
-    
+
     if (connector) {
       wagmiConnect({ connector })
     }
   }, [connectors, wagmiConnect])
-  
+
   // Disconnect wallet
   const disconnect = useCallback(() => {
     wagmiDisconnect()
     clearUser()
   }, [wagmiDisconnect, clearUser])
-  
+
   // Switch network
   const switchNetwork = useCallback((targetChainId: number) => {
     if (SUPPORTED_CHAIN_IDS.includes(targetChainId)) {
       switchChain({ chainId: targetChainId as 1 | 11155111 | 31337 })
     }
   }, [switchChain])
-  
+
   // Format address for display
   const formatAddressDisplay = useCallback((addr?: string) => {
     return formatAddress(addr || address || '')
   }, [address])
-  
+
   // Map connectors to a simpler format
   const mappedConnectors = connectors.map(connector => ({
     id: connector.id,
     name: connector.name,
     icon: connector.icon,
   }))
-  
+
   return {
     // Connection state
     address,
     isConnected,
     isConnecting: isConnecting || isConnectPending,
     isReconnecting,
-    
+
     // Chain information
     chainId,
     isCorrectNetwork,
-    
+
     // Connection methods
     connect,
     disconnect,
     switchNetwork,
-    
+
     // Utility methods
     formatAddress: formatAddressDisplay,
-    
+
     // Available connectors
     connectors: mappedConnectors,
   }

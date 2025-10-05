@@ -53,13 +53,13 @@ export interface CreateEventParams {
 export const useOrganizerEvents = (): UseOrganizerEventsReturn => {
   const { address, isConnected } = useWallet()
   const chainId = useChainId()
-  const { 
-    isContractReady, 
-    createEvent: contractCreateEvent, 
-    updateEventStatus: contractUpdateStatus, 
-    withdrawRevenue: contractWithdrawRevenue 
+  const {
+    isContractReady,
+    createEvent: contractCreateEvent,
+    updateEventStatus: contractUpdateStatus,
+    withdrawRevenue: contractWithdrawRevenue
   } = useIngressosContract()
-  
+
   const [events, setEvents] = useState<OrganizerEventWithStats[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)

@@ -4,7 +4,7 @@ import { INGRESSOS_ABI } from './IngressosABI'
 export const INGRESSOS_CONTRACT_ADDRESS = {
   // Mainnet - to be updated when deployed
   1: '0x0000000000000000000000000000000000000000',
-  // Sepolia testnet - to be updated when deployed  
+  // Sepolia testnet - to be updated when deployed
   11155111: '0x84FF135Be2a9cE9741F679fB527851d40646393E',
   // Hardhat local
   31337: '0x0000000000000000000000000000000000000000',

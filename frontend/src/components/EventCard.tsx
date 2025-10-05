@@ -11,15 +11,15 @@ interface EventCardProps {
   showActions?: boolean
 }
 
-const EventCard: React.FC<EventCardProps> = ({ 
-  event, 
-  onClick, 
+const EventCard: React.FC<EventCardProps> = ({
+  event,
+  onClick,
   className = '',
-  showActions = true 
+  showActions = true
 }) => {
   const { getEventStatusName } = useIngressosContract()
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
-  
+
   const handleClick = () => {
     onClick?.(event)
   }
@@ -44,7 +44,7 @@ const EventCard: React.FC<EventCardProps> = ({
   }
 
   return (
-    <div 
+    <div
       className={`bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden transition-all duration-200 ${
         isClickable ? 'hover:shadow-lg hover:border-blue-300 cursor-pointer' : ''
       } ${className}`}
@@ -58,7 +58,7 @@ const EventCard: React.FC<EventCardProps> = ({
             <div className="text-sm opacity-90">Event #{event.eventId}</div>
           </div>
         </div>
-        
+
         {/* Status Badge */}
         <div className="absolute top-3 right-3">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
@@ -119,12 +119,12 @@ const EventCard: React.FC<EventCardProps> = ({
             <span>{availableTickets} / {Number(event.maxSupply)}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
+            <div
               className={`h-2 rounded-full transition-all duration-300 ${
                 isSoldOut ? 'bg-red-500' : 'bg-blue-500'
               }`}
-              style={{ 
-                width: `${(Number(event.currentSupply) / Number(event.maxSupply)) * 100}%` 
+              style={{
+                width: `${(Number(event.currentSupply) / Number(event.maxSupply)) * 100}%`
               }}
             />
           </div>
@@ -153,12 +153,12 @@ const EventCard: React.FC<EventCardProps> = ({
                 setShowPurchaseModal(true)
               }}
             >
-              {isSoldOut ? 'Sold Out' : 
+              {isSoldOut ? 'Sold Out' :
                !isUpcoming ? 'Event Ended' :
-               event.status !== 0 ? 'Not Available' : 
+               event.status !== 0 ? 'Not Available' :
                'Buy Ticket'}
             </button>
-            
+
             <button
               className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={(e) => {

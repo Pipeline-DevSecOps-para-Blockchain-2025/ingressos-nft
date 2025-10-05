@@ -85,7 +85,7 @@ export const useKeyboardNavigation = (options: UseKeyboardNavigationOptions = {}
 export const useFocusManagement = (containerRef: React.RefObject<HTMLElement>) => {
   const getFocusableElements = useCallback((): HTMLElement[] => {
     if (!containerRef.current) return []
-    
+
     const focusableSelectors = [
       'button:not([disabled])',
       'input:not([disabled])',
@@ -94,7 +94,7 @@ export const useFocusManagement = (containerRef: React.RefObject<HTMLElement>) =
       'a[href]',
       '[tabindex]:not([tabindex="-1"])'
     ].join(', ')
-    
+
     return Array.from(containerRef.current.querySelectorAll(focusableSelectors))
   }, [containerRef])
 

@@ -26,24 +26,24 @@ export interface UseEventsReturn {
   events: EventWithId[]
   isLoading: boolean
   error: Error | null
-  
+
   // Pagination
   hasNextPage: boolean
   isFetchingNextPage: boolean
   fetchNextPage: () => void
-  
+
   // Filtering and search
   filters: EventFilters
   setFilters: (filters: EventFilters) => void
   filteredEvents: EventWithId[]
-  
+
   // Individual event queries
   getEvent: (eventId: number) => {
     data: EventWithId | undefined
     isLoading: boolean
     error: Error | null
   }
-  
+
   // Utilities
   refetch: () => void
   totalEvents: number
@@ -91,7 +91,7 @@ export const useEvents = (): UseEventsReturn => {
       }
 
       const eventResults = await Promise.all(eventPromises)
-      
+
       // Filter out failed requests and add to events array
       eventResults.forEach((event) => {
         if (event) {
@@ -117,7 +117,7 @@ export const useEvents = (): UseEventsReturn => {
     // Since we can't use hooks in async functions, we'll need to handle this differently
     // For now, we'll create a simple fetch mechanism
     // In a real implementation, you might want to use a different approach
-    
+
     // This is a simplified version - in practice you'd want to integrate with the contract properly
     const mockEvent: EventWithId = {
       eventId,
@@ -132,7 +132,7 @@ export const useEvents = (): UseEventsReturn => {
       status: Math.floor(Math.random() * 4),
       createdAt: BigInt(Math.floor(Date.now() / 1000) - 86400 * eventId),
     }
-    
+
     return mockEvent
   }
 
@@ -149,7 +149,7 @@ export const useEvents = (): UseEventsReturn => {
     // Search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase()
-      filtered = filtered.filter(event => 
+      filtered = filtered.filter(event =>
         event.name.toLowerCase().includes(searchTerm) ||
         event.description.toLowerCase().includes(searchTerm) ||
         event.venue.toLowerCase().includes(searchTerm)
@@ -181,7 +181,7 @@ export const useEvents = (): UseEventsReturn => {
 
     // Organizer filter
     if (filters.organizer) {
-      filtered = filtered.filter(event => 
+      filtered = filtered.filter(event =>
         event.organizer.toLowerCase() === filters.organizer!.toLowerCase()
       )
     }
@@ -204,20 +204,20 @@ export const useEvents = (): UseEventsReturn => {
     events,
     isLoading,
     error,
-    
+
     // Pagination
     hasNextPage: hasNextPage || false,
     isFetchingNextPage,
     fetchNextPage,
-    
+
     // Filtering and search
     filters,
     setFilters,
     filteredEvents,
-    
+
     // Individual event queries
     getEvent,
-    
+
     // Utilities
     refetch,
     totalEvents,

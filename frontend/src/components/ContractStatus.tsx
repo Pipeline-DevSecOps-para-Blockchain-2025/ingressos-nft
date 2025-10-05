@@ -24,7 +24,7 @@ const ContractStatus: React.FC = () => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4">
       <h3 className="font-medium text-gray-800 mb-4">Smart Contract Status</h3>
-      
+
       <div className="space-y-3">
         {/* Contract Address */}
         <div className="flex justify-between items-center">

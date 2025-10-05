@@ -103,7 +103,7 @@ class PerformanceMonitor {
   getAverageMetric(name: string): number {
     const metrics = this.getMetricsByName(name)
     if (metrics.length === 0) return 0
-    
+
     const sum = metrics.reduce((acc, metric) => acc + metric.duration, 0)
     return sum / metrics.length
   }
@@ -164,7 +164,7 @@ export const withPerformanceTracking = <P extends object>(
 ) => {
   return React.memo((props: P) => {
     const renderStart = performance.now()
-    
+
     React.useEffect(() => {
       const renderDuration = performance.now() - renderStart
       performanceMonitor.recordMetric(`component-${componentName}-render`, renderDuration)
@@ -179,7 +179,7 @@ export const analyzeBundleSize = () => {
   if (typeof window === 'undefined') return
 
   const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
-  const jsResources = resources.filter(resource => 
+  const jsResources = resources.filter(resource =>
     resource.name.endsWith('.js') || resource.name.includes('chunk')
   )
 

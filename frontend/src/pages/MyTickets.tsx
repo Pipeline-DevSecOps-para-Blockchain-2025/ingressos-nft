@@ -37,7 +37,7 @@ const MyTickets: React.FC = () => {
   // Filter tickets based on selected filter
   const filteredTickets = tickets.filter(ticket => {
     const now = Math.floor(Date.now() / 1000)
-    
+
     switch (filter) {
       case 'upcoming':
         return ticket.eventDate > now && ticket.eventStatus === 0
@@ -193,7 +193,7 @@ const MyTickets: React.FC = () => {
               {filter === 'all' ? 'No tickets yet' : `No ${filter} tickets`}
             </h3>
             <p className="text-gray-600 mb-6">
-              {filter === 'all' 
+              {filter === 'all'
                 ? 'Purchase your first ticket to get started!'
                 : `You don't have any ${filter} tickets.`
               }

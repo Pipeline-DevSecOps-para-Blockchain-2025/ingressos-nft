@@ -29,7 +29,7 @@ export const useTheme = (): UseThemeReturn => {
   const updateResolvedTheme = useCallback(() => {
     const newResolvedTheme = theme === 'system' ? getSystemTheme() : theme
     setResolvedTheme(newResolvedTheme)
-    
+
     if (typeof window !== 'undefined') {
       const root = window.document.documentElement
       root.classList.remove('light', 'dark')
@@ -62,7 +62,7 @@ export const useTheme = (): UseThemeReturn => {
     if (typeof window !== 'undefined' && theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
       const handleChange = () => updateResolvedTheme()
-      
+
       mediaQuery.addEventListener('change', handleChange)
       return () => mediaQuery.removeEventListener('change', handleChange)
     }
