@@ -45,7 +45,7 @@ forge build
 forge test
 
 # Deploy (after setting up .env)
-forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast
+forge script --rpc-url sepolia --account account --broadcast script/Deploy.s.sol
 ```
 
 ### 2. Frontend
@@ -81,4 +81,3 @@ pnpm dev
 
 - [Smart Contracts Documentation](./contracts/README.md)
 - [Frontend Documentation](./frontend/README.md)
-- [Deployment Guide](./DEPLOYMENT_GUIDE.md)

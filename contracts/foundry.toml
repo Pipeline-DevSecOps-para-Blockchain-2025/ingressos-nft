@@ -19,3 +19,9 @@ contract_new_lines = false
 single_line_statement_blocks = "multi"
 number_underscore = "thousands"
 hex_underscore = "bytes"
+
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }

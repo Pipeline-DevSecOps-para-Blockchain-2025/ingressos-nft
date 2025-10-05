@@ -45,10 +45,22 @@ $ forge snapshot
 $ anvil
 ```
 
+### Add Account
+
+```shell
+$ cast wallet import account -i
+Enter private key:
+```
+
 ### Deploy
 
 ```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+$ forge script --rpc-url sepolia --account account --broadcast script/Deploy.s.sol:DeployScript
+...
+Contract Address: 0x327353E250518cFAF595ed14EdeC108205cC429e
+...
+$ forge verify-contract --chain sepolia --watch 0x327353E250518cFAF595ed14EdeC108205cC429e src/Ingressos.sol:Ingressos
+$ forge verify-bytecode --rpc-url sepolia 0x327353E250518cFAF595ed14EdeC108205cC429e src/Ingressos.sol:Ingressos
 ```
 
 ### Cast
