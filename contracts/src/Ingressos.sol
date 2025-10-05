@@ -73,14 +73,6 @@ contract Ingressos is ERC721, AccessControl {
 
     event EventStatusChanged(uint256 indexed eventId, uint8 oldStatus, uint8 newStatus);
 
-    // Modifiers
-    modifier onlyOrganizer() {
-        if (!hasRole(ORGANIZER_ROLE, msg.sender)) {
-            revert UnauthorizedOrganizer(msg.sender);
-        }
-        _;
-    }
-
     constructor() ERC721("Ingressos", "ING") {
         // Grant the deployer the default admin role
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -103,7 +95,7 @@ contract Ingressos is ERC721, AccessControl {
         string memory venue,
         uint256 ticketPrice,
         uint256 maxSupply
-    ) external onlyOrganizer returns (uint256) {
+    ) external onlyRole(ORGANIZER_ROLE) returns (uint256) {
         // Input validation
         require(bytes(name).length > 0, "Event name cannot be empty");
         require(bytes(venue).length > 0, "Event venue cannot be empty");
@@ -235,73 +227,69 @@ contract Ingressos is ERC721, AccessControl {
         Event memory eventData = events[ticket.eventId];
 
         // Create JSON metadata
-        return string(
-            abi.encodePacked(
-                '{"name":"',
-                eventData.name,
-                " - Ticket #",
-                _toString(ticket.ticketNumber),
-                '","description":"',
-                eventData.description,
-                '","image":"data:image/svg+xml;base64,',
-                _generateTicketSVG(tokenId),
-                '","attributes":[',
-                '{"trait_type":"Event","value":"',
-                eventData.name,
-                '"},',
-                '{"trait_type":"Venue","value":"',
-                eventData.venue,
-                '"},',
-                '{"trait_type":"Ticket Number","value":"',
-                _toString(ticket.ticketNumber),
-                '"},',
-                '{"trait_type":"Purchase Price","value":"',
-                _toString(ticket.purchasePrice),
-                '"},',
-                '{"trait_type":"Event Date","value":"',
-                _toString(eventData.date),
-                '"},',
-                '{"trait_type":"Purchase Date","value":"',
-                _toString(ticket.purchaseDate),
-                '"},',
-                '{"trait_type":"Original Buyer","value":"',
-                _toHexString(ticket.originalBuyer),
-                '"},',
-                '{"trait_type":"Event Status","value":"',
-                _getStatusString(eventData.status),
-                '"}',
-                "]}"
-            )
+        return string.concat(
+            '{"name":"',
+            eventData.name,
+            " - Ticket #",
+            _toString(ticket.ticketNumber),
+            '","description":"',
+            eventData.description,
+            '","image":"data:image/svg+xml;base64,',
+            _generateTicketSvg(tokenId),
+            '","attributes":[',
+            '{"trait_type":"Event","value":"',
+            eventData.name,
+            '"},',
+            '{"trait_type":"Venue","value":"',
+            eventData.venue,
+            '"},',
+            '{"trait_type":"Ticket Number","value":"',
+            _toString(ticket.ticketNumber),
+            '"},',
+            '{"trait_type":"Purchase Price","value":"',
+            _toString(ticket.purchasePrice),
+            '"},',
+            '{"trait_type":"Event Date","value":"',
+            _toString(eventData.date),
+            '"},',
+            '{"trait_type":"Purchase Date","value":"',
+            _toString(ticket.purchaseDate),
+            '"},',
+            '{"trait_type":"Original Buyer","value":"',
+            _toHexString(ticket.originalBuyer),
+            '"},',
+            '{"trait_type":"Event Status","value":"',
+            _getStatusString(eventData.status),
+            '"}',
+            "]}"
         );
     }
 
     // Helper functions for metadata generation
-    function _generateTicketSVG(uint256 tokenId) internal view returns (string memory) {
+    function _generateTicketSvg(uint256 tokenId) internal view returns (string memory) {
         TicketInfo memory ticket = tickets[tokenId];
         Event memory eventData = events[ticket.eventId];
 
         // Simple SVG ticket design
-        string memory svg = string(
-            abi.encodePacked(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">',
-                '<rect width="400" height="200" fill="#f0f0f0" stroke="#333" stroke-width="2"/>',
-                '<text x="20" y="30" font-family="Arial" font-size="18" font-weight="bold" fill="#333">',
-                eventData.name,
-                "</text>",
-                '<text x="20" y="60" font-family="Arial" font-size="14" fill="#666">',
-                eventData.venue,
-                "</text>",
-                '<text x="20" y="90" font-family="Arial" font-size="12" fill="#666">Ticket #',
-                _toString(ticket.ticketNumber),
-                "</text>",
-                '<text x="20" y="120" font-family="Arial" font-size="12" fill="#666">Token ID: ',
-                _toString(tokenId),
-                "</text>",
-                '<text x="20" y="150" font-family="Arial" font-size="10" fill="#999">',
-                _toHexString(ticket.originalBuyer),
-                "</text>",
-                "</svg>"
-            )
+        string memory svg = string.concat(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">',
+            '<rect width="400" height="200" fill="#f0f0f0" stroke="#333" stroke-width="2"/>',
+            '<text x="20" y="30" font-family="Arial" font-size="18" font-weight="bold" fill="#333">',
+            eventData.name,
+            "</text>",
+            '<text x="20" y="60" font-family="Arial" font-size="14" fill="#666">',
+            eventData.venue,
+            "</text>",
+            '<text x="20" y="90" font-family="Arial" font-size="12" fill="#666">Ticket #',
+            _toString(ticket.ticketNumber),
+            "</text>",
+            '<text x="20" y="120" font-family="Arial" font-size="12" fill="#666">Token ID: ',
+            _toString(tokenId),
+            "</text>",
+            '<text x="20" y="150" font-family="Arial" font-size="10" fill="#999">',
+            _toHexString(ticket.originalBuyer),
+            "</text>",
+            "</svg>"
         );
 
         return _base64Encode(bytes(svg));
@@ -336,7 +324,8 @@ contract Ingressos is ERC721, AccessControl {
         bytes memory buffer = new bytes(digits);
         while (value != 0) {
             digits -= 1;
-            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            /// forge-lint: disable-next-line(unsafe-typecast)
+            buffer[digits] = bytes1(uint8(48 + uint8(value % 10)));
             value /= 10;
         }
         return string(buffer);
