@@ -10,7 +10,7 @@ interface LiveSupplyIndicatorProps {
 }
 
 const LiveSupplyIndicator: React.FC<LiveSupplyIndicatorProps> = ({
-  eventId,
+  //eventId,
   currentSupply,
   maxSupply,
   onSupplyUpdate,
