@@ -27,7 +27,7 @@ export const useOptimisticUpdate = <T, P = any>(
   const [error, setError] = useState<Error | null>(null)
 
   const originalDataRef = useRef<T>(initialData)
-  const rollbackTimeoutRef = useRef<NodeJS.Timeout>()
+  const rollbackTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const execute = useCallback(async (
     optimisticData: T,

@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from 'react'
-import { useWatchContractEvent, usePublicClient } from 'wagmi'
+import { useWatchContractEvent } from 'wagmi'
 import { useIngressosContract } from './useIngressosContract'
 import { INGRESSOS_ABI } from '../contracts'
 
@@ -23,7 +23,7 @@ export interface UseContractEventsReturn {
 
 export const useContractEvents = (): UseContractEventsReturn => {
   const { contractAddress, isContractReady } = useIngressosContract()
-  const publicClient = usePublicClient()
+  //const publicClient = usePublicClient()
 
   const [events, setEvents] = useState<ContractEvent[]>([])
   const [isListening, setIsListening] = useState(false)

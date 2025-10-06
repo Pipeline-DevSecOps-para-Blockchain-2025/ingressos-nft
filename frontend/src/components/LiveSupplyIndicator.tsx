@@ -20,7 +20,7 @@ const LiveSupplyIndicator: React.FC<LiveSupplyIndicatorProps> = ({
   const [isUpdating, setIsUpdating] = useState(false)
   const [lastUpdateTime, setLastUpdateTime] = useState<number | null>(null)
 
-  const { isLive, refreshData } = useLiveUpdates(
+  const { isLive } = useLiveUpdates(
     {
       enableNotifications: false, // Don't show notifications for individual supply updates
       enableAutoRefresh: true,

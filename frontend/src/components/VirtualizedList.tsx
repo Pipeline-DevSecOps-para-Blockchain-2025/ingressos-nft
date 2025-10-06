@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef } from 'react'
 import { useVirtualizedList } from '../hooks/useVirtualization'
 
 interface VirtualizedListProps<T> {

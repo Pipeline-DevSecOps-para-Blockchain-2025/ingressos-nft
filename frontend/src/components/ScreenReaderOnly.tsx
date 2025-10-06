@@ -2,7 +2,7 @@ import React from 'react'
 
 interface ScreenReaderOnlyProps {
   children: React.ReactNode
-  as?: keyof JSX.IntrinsicElements
+  as?: keyof React.JSX.IntrinsicElements
   className?: string
 }
 
@@ -11,10 +11,11 @@ const ScreenReaderOnly: React.FC<ScreenReaderOnlyProps> = ({
   as: Component = 'span',
   className = ''
 }) => {
-  return (
-    <Component
-      className={`sr-only ${className}`}
-      style={{
+  return React.createElement(
+    Component,
+    {
+      className: `sr-only ${className}`,
+      style: {
         position: 'absolute',
         width: '1px',
         height: '1px',
@@ -24,10 +25,9 @@ const ScreenReaderOnly: React.FC<ScreenReaderOnlyProps> = ({
         clip: 'rect(0, 0, 0, 0)',
         whiteSpace: 'nowrap',
         border: '0'
-      }}
-    >
-      {children}
-    </Component>
+      }
+    },
+    children
   )
 }
 

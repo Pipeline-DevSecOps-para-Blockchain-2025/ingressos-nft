@@ -105,7 +105,7 @@ const TransferTicket: React.FC<TransferTicketProps> = ({
 
     await executeTransaction(
       transferTicket,
-      [address, recipientAddress as Address, ticket.tokenId],
+      [address as Address, recipientAddress as Address, ticket.tokenId],
       {
         onSuccess: (hash) => {
           console.log('Transfer transaction submitted:', hash)

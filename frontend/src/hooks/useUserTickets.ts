@@ -72,7 +72,7 @@ export const useUserTickets = (): UseUserTicketsReturn => {
     setError(null)
 
     try {
-      const userBalance = Number(balance)
+      // const userBalance = Number(balance) // TODO: Use for pagination or filtering
       const ticketPromises: Promise<TicketMetadata | null>[] = []
 
       // For now, we'll iterate through token IDs to find user's tickets

@@ -1,4 +1,12 @@
 // Performance monitoring utilities
+import React from 'react'
+
+// Extend PerformanceEntry for first-input timing
+interface PerformanceEventTiming extends PerformanceEntry {
+  processingStart: number
+  processingEnd: number
+  cancelable?: boolean
+}
 
 interface PerformanceMetrics {
   name: string
@@ -69,7 +77,11 @@ class PerformanceMonitor {
       const fidObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries()
         entries.forEach((entry) => {
-          this.recordMetric('first-input-delay', entry.processingStart - entry.startTime)
+          // Cast to PerformanceEventTiming for first-input entries
+          const eventEntry = entry as PerformanceEventTiming
+          if (eventEntry.processingStart && eventEntry.startTime) {
+            this.recordMetric('first-input-delay', eventEntry.processingStart - eventEntry.startTime)
+          }
         })
       })
       fidObserver.observe({ entryTypes: ['first-input'] })
@@ -170,7 +182,7 @@ export const withPerformanceTracking = <P extends object>(
       performanceMonitor.recordMetric(`component-${componentName}-render`, renderDuration)
     })
 
-    return <Component {...props} />
+    return React.createElement(Component, props)
   })
 }
 

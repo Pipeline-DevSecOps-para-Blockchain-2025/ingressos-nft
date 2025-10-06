@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useContractEvents } from '../hooks/useContractEvents'
-import { formatEther, formatDateTime } from '../utils'
+import { formatEther } from '../utils'
 import type { ContractEvent } from '../hooks/useContractEvents'
 
 interface ActivityFeedProps {
@@ -149,11 +149,10 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
               <button
                 key={key}
                 onClick={() => setFilter(key as typeof filter)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                  filter === key
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${filter === key
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
               >
                 {label} ({count})
               </button>
