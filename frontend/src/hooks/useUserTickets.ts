@@ -30,7 +30,7 @@ export interface UseUserTicketsReturn {
 
 export const useUserTickets = (): UseUserTicketsReturn => {
   const { address, isConnected } = useWallet()
-  const { contractAddress, isContractReady, getTicketInfo, getEventDetails, balanceOf } = useIngressosContract()
+  const { contractAddress, isContractReady } = useIngressosContract()
 
   const [tickets, setTickets] = useState<TicketMetadata[]>([])
   const [isLoading, setIsLoading] = useState(false)

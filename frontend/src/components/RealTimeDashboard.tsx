@@ -21,7 +21,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
   className = ''
 }) => {
   const { events, refetch } = useEvents()
-  const [refreshCount, setRefreshCount] = useState(0)
+  const [, setRefreshCount] = useState(0)
 
   const { isLive, lastUpdate, eventCount, startLiveUpdates, stopLiveUpdates, refreshData } = useLiveUpdates(
     {
