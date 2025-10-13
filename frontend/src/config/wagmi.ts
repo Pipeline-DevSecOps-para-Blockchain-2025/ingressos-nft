@@ -10,6 +10,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'Ingressos NFT Ticketing'
 const appDescription = import.meta.env.VITE_APP_DESCRIPTION || 'Web3 NFT Ticketing Platform'
 const appUrl = import.meta.env.VITE_APP_URL || 'http://localhost:5173'
 const appIcon = import.meta.env.VITE_APP_ICON || 'http://localhost:5173/vite.svg'
+const spoliaRpcUrl = import.meta.env.VITE_SEPOLIA_RPC_URL || 'https://sepolia.drpc.org'
 
 export const config = createConfig({
   chains: [mainnet, sepolia, hardhat],
@@ -28,7 +29,7 @@ export const config = createConfig({
   ],
   transports: {
     [mainnet.id]: http(),
-    [sepolia.id]: http('https://eth-sepolia.g.alchemy.com/v2/gjN9IUYJz4duZ3n-8DCt0'),
+    [sepolia.id]: http(spoliaRpcUrl),
     [hardhat.id]: http('http://127.0.0.1:8545'),
   },
 })

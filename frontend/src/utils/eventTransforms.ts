@@ -152,7 +152,7 @@ export function createMockEvent(
     description: `Description for mock event ${eventId}`,
     date: BigInt(Date.now() + 86400000), // Tomorrow
     venue: `Venue ${eventId}`,
-    ticketPrice: BigInt('1000000000000000000'), // 1 ETH
+    ticketPrice: BigInt('10000000000000000'), // 0.01 ETH
     maxSupply: BigInt(100),
     currentSupply: BigInt(0),
     organizer,

@@ -25,7 +25,7 @@ const PurchaseTicket: React.FC<PurchaseTicketProps> = ({
   className = ''
 }) => {
   const { address, isConnected } = useWallet()
-  const balance = BigInt('1000000000000000000') // Mock balance for now
+  const balance = BigInt('10000000000000000') // Mock balance for now
   const { purchaseTicket, formatPrice } = useIngressosContract()
   const {
     executeTransaction,

@@ -57,10 +57,10 @@ Enter private key:
 ```shell
 $ forge script --rpc-url sepolia --account account --broadcast script/Deploy.s.sol:DeployScript
 ...
-Contract Address: 0x327353E250518cFAF595ed14EdeC108205cC429e
+Contract Address: 0x84FF135Be2a9cE9741F679fB527851d40646393E
 ...
-$ forge verify-contract --chain sepolia --watch 0x327353E250518cFAF595ed14EdeC108205cC429e src/Ingressos.sol:Ingressos
-$ forge verify-bytecode --rpc-url sepolia 0x327353E250518cFAF595ed14EdeC108205cC429e src/Ingressos.sol:Ingressos
+$ forge verify-contract --chain sepolia --watch 0x84FF135Be2a9cE9741F679fB527851d40646393E src/Ingressos.sol:Ingressos
+$ forge verify-bytecode --rpc-url sepolia 0x84FF135Be2a9cE9741F679fB527851d40646393E src/Ingressos.sol:Ingressos
 ```
 
 ### Cast
