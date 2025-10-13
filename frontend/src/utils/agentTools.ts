@@ -1,105 +1,240 @@
 import { tool } from '@langchain/core/tools'
-import z from 'zod'
+import { z } from 'zod'
 
-import type { UseIngressosContractReturn } from '../hooks/useIngressosContract'
-import type { UseTransactionHandlerReturn } from '../hooks/useTransactionHandler'
-import type { UseUserTicketsReturn } from '../hooks/useUserTickets'
-import type { UseWalletReturn } from '../hooks/useWallet'
-import type { UseEventsReturn } from '../hooks/useEvents'
-
+// Define the context interface that will be passed to tools
 export interface AgentContext {
-  wallet: UseWalletReturn
-  contract: UseIngressosContractReturn
-  transactions: UseTransactionHandlerReturn
-  tickets: UseUserTicketsReturn
-  events: UseEventsReturn
+  wallet: any
+  contract: any
+  transactions: any
+  tickets: any
+  events: any
 }
 
-const getAgentContext = (options: object): AgentContext | undefined => {
-  if ('context' in options) {
-    return options.context as AgentContext
-  } else {
-    return undefined
-  }
-}
-
-const safeJson = <T>(target: T): string => {
-  const json = JSON.stringify(target, (_, value) => {
-    if (typeof value === 'bigint') {
-      return Number(value)
-    }
-    return value
-  })
-
-  return json ?? 'null'
-}
-
+// Tool to get current context information
 export const getContext = tool(
-  (input, options) => {
-    console.log('get-context', input, options)
-    return safeJson(getAgentContext(options))
-  },
-  {
-    name: 'get-context',
-    description: 'Get current context',
-    schema: z.unknown()
-  }
-)
+  async (_input, config) => {
+    const context = (config as any)?.context as AgentContext
 
-export const listTickets = tool(
-  (input, options) => {
-    console.log('list-tickets', input, options)
-    const context = getAgentContext(options)
-    context?.tickets.refetch()
-    return safeJson(context?.tickets)
-  },
-  {
-    name: 'list-tickets',
-    description: 'Get tickets assigned to current user',
-    schema: z.unknown()
-  }
-)
-
-export const listEvents = tool(
-  (input, options) => {
-    console.log('list-events', input, options)
-    const context = getAgentContext(options)
-    context?.events.refetch()
-    return safeJson(context?.events.events)
-  },
-  {
-    name: 'list-events',
-    description: 'Get tickets assigned to current user',
-    schema: z.unknown()
-  }
-)
-
-export const purchaseTickets = tool(
-  async (input, options) => {
-    console.log('purchase-tickets', input, options)
-    const context = getAgentContext(options)
     if (!context) {
-      return { ok: false, reason: 'missing context' }
+      return "Context not available"
     }
 
-    const event = context.events.getEvent(input.eventId)
-    if (!event.data) {
-      return { ok: false, reason: `event '${input.eventId}' not found` }
+    const { wallet, contract, tickets, events } = context
+
+    const info = {
+      wallet: {
+        isConnected: wallet.isConnected,
+        address: wallet.address,
+        chainId: wallet.chainId,
+        isCorrectNetwork: wallet.isCorrectNetwork,
+        balance: wallet.formatAddress ? wallet.formatAddress() : 'Unknown'
+      },
+      contract: {
+        isReady: contract.isContractReady,
+        address: contract.contractAddress
+      },
+      tickets: {
+        count: tickets.tickets?.length || 0,
+        isLoading: tickets.isLoading
+      },
+      events: {
+        count: events.events?.length || 0,
+        isLoading: events.isLoading
+      }
     }
 
-    context.tickets.refetch()
-    await context.transactions.executeTransaction(
-      context.contract.purchaseTicket,
-      [event.data.eventId, context.contract.formatPrice(event.data.ticketPrice)],
-    )
-
-    return { ok: true }
+    return `Current Status:
+- Wallet: ${info.wallet.isConnected ? 'Connected' : 'Not connected'}
+- Address: ${info.wallet.address || 'None'}
+- Network: ${info.wallet.isCorrectNetwork ? 'Supported' : 'Unsupported'}
+- Contract: ${info.contract.isReady ? 'Ready' : 'Not ready'}
+- Your Tickets: ${info.tickets.count}
+- Available Events: ${info.events.count}`
   },
   {
-    name: 'purchase-tickets',
-    description: 'Purchase tickets for an event',
+    name: "getContext",
+    description: "Get current wallet, contract, and user context information",
     schema: z.object({
-      eventId: z.number().describe('ID of event to purchase')
-    }).describe('Target event')
+      type: z.string().optional().describe("Type of context to get (optional)")
+    })
+  }
+)
+
+// Tool to list available events
+export const listEvents = tool(
+  async (_input, config) => {
+    const context = (config as any)?.context as AgentContext
+
+    if (!context?.events) {
+      return "Events data not available"
+    }
+
+    const { events, isLoading, error } = context.events
+
+    if (isLoading) {
+      return "Loading events..."
+    }
+
+    if (error) {
+      return `Error loading events: ${error.message}`
+    }
+
+    if (!events || events.length === 0) {
+      return "No events available at the moment."
+    }
+
+    const eventList = events.map((event: any) => {
+      const eventDate = new Date(Number(event.date) * 1000)
+      const isUpcoming = eventDate > new Date()
+      const availableTickets = Number(event.maxSupply - event.currentSupply)
+
+      return `Event #${event.eventId}: ${event.name}
+- Date: ${eventDate.toLocaleDateString()}
+- Venue: ${event.venue}
+- Price: ${event.ticketPrice ? (Number(event.ticketPrice) / 1e18).toFixed(4) : 'Unknown'} ETH
+- Available: ${availableTickets}/${Number(event.maxSupply)}
+- Status: ${isUpcoming ? 'Upcoming' : 'Past'}`
+    }).join('\n\n')
+
+    return `Available Events (${events.length}):\n\n${eventList}`
+  },
+  {
+    name: "listEvents",
+    description: "List all available events with details",
+    schema: z.object({
+      filter: z.string().optional().describe("Filter events by status (upcoming, past, all)")
+    })
+  }
+)
+
+// Tool to list user's tickets
+export const listTickets = tool(
+  async (_input, config) => {
+    const context = (config as any)?.context as AgentContext
+
+    if (!context?.tickets) {
+      return "Tickets data not available"
+    }
+
+    const { tickets, isLoading, error } = context.tickets
+
+    if (isLoading) {
+      return "Loading your tickets..."
+    }
+
+    if (error) {
+      return `Error loading tickets: ${error.message}`
+    }
+
+    if (!tickets || tickets.length === 0) {
+      return "You don't have any tickets yet. Browse events to purchase your first ticket!"
+    }
+
+    const ticketList = tickets.map((ticket: any) => {
+      const purchaseDate = new Date(Number(ticket.purchaseDate) * 1000)
+
+      return `Ticket #${ticket.tokenId}:
+- Event ID: ${ticket.eventId}
+- Purchase Date: ${purchaseDate.toLocaleDateString()}
+- Purchase Price: ${ticket.purchasePrice ? (Number(ticket.purchasePrice) / 1e18).toFixed(4) : 'Unknown'} ETH
+- Owner: ${ticket.originalBuyer}`
+    }).join('\n\n')
+
+    return `Your Tickets (${tickets.length}):\n\n${ticketList}`
+  },
+  {
+    name: "listTickets",
+    description: "List user's owned tickets",
+    schema: z.object({
+      filter: z.string().optional().describe("Filter tickets by status (upcoming, past, all)")
+    })
+  }
+)
+
+// Tool to help with ticket purchases
+export const purchaseTickets = tool(
+  async (input, config) => {
+    const context = (config as any)?.context as AgentContext
+
+    if (!context?.wallet?.isConnected) {
+      return "Please connect your wallet first to purchase tickets."
+    }
+
+    if (!context?.wallet?.isCorrectNetwork) {
+      return "Please switch to a supported network to purchase tickets."
+    }
+
+    if (!context?.contract?.isContractReady) {
+      return "Smart contract is not ready. Please check your network connection."
+    }
+
+    const { events } = context.events || {}
+
+    if (!events || events.length === 0) {
+      return "No events available for purchase at the moment."
+    }
+
+    // Find the event by ID if specified
+    if (input.eventId) {
+      const event = events.find((e: any) => e.eventId === input.eventId)
+      if (!event) {
+        return `Event #${input.eventId} not found.`
+      }
+
+      const eventDate = new Date(Number(event.date) * 1000)
+      const isUpcoming = eventDate > new Date()
+      const availableTickets = Number(event.maxSupply - event.currentSupply)
+
+      if (!isUpcoming) {
+        return `Event #${input.eventId} has already passed and tickets are no longer available.`
+      }
+
+      if (availableTickets <= 0) {
+        return `Event #${input.eventId} is sold out.`
+      }
+
+      if (event.status !== 0) {
+        return `Event #${input.eventId} is not currently active for ticket sales.`
+      }
+
+      return `Event #${input.eventId} - ${event.name}:
+- Price: ${event.ticketPrice ? (Number(event.ticketPrice) / 1e18).toFixed(4) : 'Unknown'} ETH
+- Available: ${availableTickets} tickets
+- Date: ${eventDate.toLocaleDateString()}
+- Venue: ${event.venue}
+
+To purchase a ticket, go to the Events page and click "Buy Ticket" on this event.`
+    }
+
+    // List purchasable events
+    const purchasableEvents = events.filter((event: any) => {
+      const eventDate = new Date(Number(event.date) * 1000)
+      const isUpcoming = eventDate > new Date()
+      const availableTickets = Number(event.maxSupply - event.currentSupply)
+      return isUpcoming && availableTickets > 0 && event.status === 0
+    })
+
+    if (purchasableEvents.length === 0) {
+      return "No events are currently available for purchase."
+    }
+
+    const eventList = purchasableEvents.map((event: any) => {
+      const eventDate = new Date(Number(event.date) * 1000)
+      const availableTickets = Number(event.maxSupply - event.currentSupply)
+
+      return `Event #${event.eventId}: ${event.name}
+- Price: ${event.ticketPrice ? (Number(event.ticketPrice) / 1e18).toFixed(4) : 'Unknown'} ETH
+- Available: ${availableTickets} tickets
+- Date: ${eventDate.toLocaleDateString()}`
+    }).join('\n\n')
+
+    return `Events available for purchase:\n\n${eventList}\n\nTo purchase a ticket, go to the Events page and click "Buy Ticket" on your chosen event.`
+  },
+  {
+    name: "purchaseTickets",
+    description: "Help user purchase tickets for events",
+    schema: z.object({
+      eventId: z.number().optional().describe("Specific event ID to purchase ticket for")
+    })
   }
 )

@@ -14,8 +14,10 @@
   },
   "dependencies": {
     "@langchain/core": "^0.3.78",
+    "@langchain/google-genai": "^0.2.18",
     "@langchain/langgraph": "^0.4.9",
     "@langchain/ollama": "^0.2.4",
+    "@langchain/openai": "^0.6.16",
     "@tanstack/react-query": "^5.90.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
