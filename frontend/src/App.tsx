@@ -3,6 +3,7 @@ import WalletConnection from './components/WalletConnection'
 import NetworkSwitcher from './components/NetworkSwitcher'
 import ContractStatus from './components/ContractStatus'
 import NotificationCenter from './components/NotificationCenter'
+import Agent from './pages/Agent'
 import Events from './pages/Events'
 import MyTickets from './pages/MyTickets'
 import OrganizerDashboard from './pages/OrganizerDashboard'
@@ -21,7 +22,9 @@ function App() {
   const { isAdmin } = useAdminRole()
   const { events: contractEvents, isListening } = useContractEvents()
   const { addSuccess, addInfo, addWarning } = useNotifications()
-  const [currentPage, setCurrentPage] = useState<'home' | 'events' | 'tickets' | 'organizer' | 'admin'>('home')
+  const [currentPage, setCurrentPage] = useState<'home' | 'agent' | 'events' | 'tickets' | 'organizer' | 'admin'>(
+    'home',
+  )
 
   const showEvents = isConnected && isCorrectNetwork
 
@@ -107,6 +110,16 @@ function App() {
                     Home
                   </button>
                   <button
+                    onClick={() => setCurrentPage('agent')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      currentPage === 'agent'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Agent
+                  </button>
+                  <button
                     onClick={() => setCurrentPage('events')}
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       currentPage === 'events'
@@ -169,7 +182,9 @@ function App() {
       )}
 
       {/* Main content */}
-      {currentPage === 'events' && showEvents ? (
+      {currentPage === 'agent' && showEvents ? (
+        <Agent />
+      ) : currentPage === 'events' && showEvents ? (
         <Events />
       ) : currentPage === 'tickets' && showEvents ? (
         <MyTickets />

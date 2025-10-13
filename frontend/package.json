@@ -13,11 +13,15 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.78",
+    "@langchain/langgraph": "^0.4.9",
+    "@langchain/ollama": "^0.2.4",
     "@tanstack/react-query": "^5.90.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "viem": "^2.38.1",
     "wagmi": "^2.18.0",
+    "zod": "^4.1.12",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -46,7 +50,9 @@
   "pnpm": {
     "overrides": {
       "@walletconnect/ethereum-provider": "^2.22.3",
-      "abitype": "^1.1.1"
+      "abitype": "^1.1.1",
+      "zod": "$zod",
+      "zod-to-json-schema": "npm:@finom/zod-to-json-schema@^3.24.11"
     }
   }
 }
