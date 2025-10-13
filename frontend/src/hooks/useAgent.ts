@@ -9,7 +9,7 @@ import { useIngressosContract } from './useIngressosContract'
 import { useTransactionHandler } from './useTransactionHandler'
 import { useUserTickets } from './useUserTickets'
 import { useWallet } from './useWallet'
-import { getContext, listEvents, listTickets, purchaseTickets, type AgentContext } from '../utils/agentTools'
+import { getContext, listEvents, listTickets, purchaseTickets, checkTransactionStatus, type AgentContext } from '../utils/agentTools'
 import { useEvents } from './useEvents'
 
 export interface UseAgentReturn {
@@ -132,7 +132,7 @@ const createAgent = (provider: AIProvider) => {
 
     return createReactAgent({
       llm: model,
-      tools: [getContext, listEvents, listTickets, purchaseTickets],
+      tools: [getContext, listEvents, listTickets, purchaseTickets, checkTransactionStatus],
     })
   } catch (error) {
     console.error(`Failed to create agent with ${provider}:`, error)
