@@ -14,9 +14,21 @@ vi.mock('../useIngressosContract', () => ({
   useIngressosContract: vi.fn(() => ({
     contractAddress: '0x1234567890123456789012345678901234567890',
     isContractReady: true,
-    getTicketInfo: vi.fn(),
-    getEventDetails: vi.fn(),
-    balanceOf: vi.fn(),
+    getTicketInfo: vi.fn(() => ({
+      data: null,
+      isLoading: false,
+      refetch: vi.fn(),
+    })),
+    ownerOf: vi.fn(() => ({
+      data: null,
+      isLoading: false,
+      refetch: vi.fn(),
+    })),
+    balanceOf: vi.fn(() => ({
+      data: BigInt(2),
+      isLoading: false,
+      refetch: vi.fn(),
+    })),
   })),
 }))
 
@@ -26,6 +38,28 @@ vi.mock('wagmi', () => ({
     isLoading: false,
     refetch: vi.fn(),
   })),
+  useChainId: vi.fn(() => 11155111), // Sepolia testnet
+}))
+
+vi.mock('../useOrganizerEventsErrorHandler', () => ({
+  useRetryLogic: vi.fn(() => ({
+    executeWithRetry: vi.fn((fn) => fn()),
+    handleError: vi.fn((error) => ({ userMessage: error.message || 'Unknown error' })),
+  })),
+}))
+
+vi.mock('../services', () => ({
+  EventFetcherFactory: {
+    getInstance: vi.fn(() => ({
+      fetchEventDetails: vi.fn(() => Promise.resolve({
+        name: 'Test Event',
+        description: 'Test Description',
+        date: BigInt(Date.now() / 1000 + 86400),
+        venue: 'Test Venue',
+        status: 0,
+      })),
+    })),
+  },
 }))
 
 describe('useUserTickets', () => {

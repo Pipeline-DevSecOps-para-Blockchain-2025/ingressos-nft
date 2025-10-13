@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useReadContract } from 'wagmi'
+import { useChainId } from 'wagmi'
 import { useWallet } from './useWallet'
 import { useIngressosContract } from './useIngressosContract'
-import { INGRESSOS_ABI, INGRESSOS_CONTRACT_ADDRESS } from '../contracts'
-import { useChainId } from 'wagmi'
+import { useOrganizerEventCache } from './useEventCache'
+import { useRetryLogic } from './useOrganizerEventsErrorHandler'
+import { EventFetcherFactory } from '../services'
+import type { EventFetcher } from '../services'
 
 export interface EventStats {
   totalRevenue: bigint
@@ -39,6 +41,10 @@ export interface UseOrganizerEventsReturn {
   createEvent: (params: CreateEventParams) => Promise<void>
   updateEventStatus: (eventId: number, status: number) => Promise<void>
   withdrawRevenue: (eventId: number) => Promise<void>
+  // Cache-related properties
+  isUsingCache: boolean
+  cacheStats: any
+  invalidateCache: () => void
 }
 
 export interface CreateEventParams {
@@ -63,24 +69,51 @@ export const useOrganizerEvents = (): UseOrganizerEventsReturn => {
   const [events, setEvents] = useState<OrganizerEventWithStats[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  const [eventFetcher, setEventFetcher] = useState<EventFetcher | null>(null)
 
-  // Get contract address for current chain
-  const contractAddress = INGRESSOS_CONTRACT_ADDRESS[chainId as keyof typeof INGRESSOS_CONTRACT_ADDRESS]
-
-  // Get next event ID to know how many events exist
-  const { data: nextEventId, refetch: refetchNextEventId } = useReadContract({
-    address: contractAddress as `0x${string}`,
-    abi: INGRESSOS_ABI,
-    functionName: 'nextEventId',
-    query: {
-      enabled: isContractReady && !!contractAddress,
-    },
+  // Initialize event cache for organizer
+  const {
+    cachedEvents,
+    hasCachedEvents,
+    cacheEvents,
+    invalidateCache,
+    cacheStats
+  } = useOrganizerEventCache(address as `0x${string}` | undefined, {
+    ttl: 5 * 60 * 1000, // 5 minutes cache
+    enableAutoInvalidation: true,
   })
 
-  // For now, let's use a simple approach with your actual event
-  const fetchOrganizerEvents = useCallback(async () => {
-    if (!isContractReady || !isConnected || !address || !contractAddress) {
+  // Initialize retry logic with error handling
+  const { executeWithRetry, handleError } = useRetryLogic()
+
+  // Initialize EventFetcher when chain changes
+  useEffect(() => {
+    if (!chainId) {
+      setEventFetcher(null)
+      return
+    }
+
+    try {
+      const fetcher = EventFetcherFactory.getInstance(chainId)
+      setEventFetcher(fetcher)
+    } catch (error) {
+      console.error('Failed to initialize EventFetcher:', error)
+      setError(error as Error)
+      setEventFetcher(null)
+    }
+  }, [chainId])
+
+  // Dynamic event fetching with cache integration
+  const fetchOrganizerEvents = useCallback(async (forceRefresh = false) => {
+    if (!isConnected || !address || !eventFetcher) {
       setEvents([])
+      return
+    }
+
+    // Check cache first (unless force refresh)
+    if (!forceRefresh && hasCachedEvents && cachedEvents) {
+      console.log('Using cached organizer events')
+      setEvents(cachedEvents)
       return
     }
 
@@ -88,49 +121,38 @@ export const useOrganizerEvents = (): UseOrganizerEventsReturn => {
     setError(null)
 
     try {
-      const totalEvents = nextEventId ? Number(nextEventId) - 1 : 0
+      console.log('Fetching organizer events from blockchain...')
 
-      if (totalEvents <= 0) {
-        setEvents([])
-        setIsLoading(false)
-        return
-      }
+      // Fetch events with retry logic
+      const organizerEvents = await executeWithRetry(
+        () => eventFetcher.fetchOrganizerEvents(address as `0x${string}`),
+        3 // Max 3 retries
+      )
 
-      // For now, create a simple event based on what we know exists
-      const organizerEvents: OrganizerEventWithStats[] = []
-
-      // We know event ID 1 exists and was created by you
-      if (totalEvents >= 1) {
-        organizerEvents.push({
-          eventId: 1,
-          name: 'Combat arms', // From the contract call we made earlier
-          description: 'combar', // From the contract call
-          date: BigInt(1756281600), // From the contract call (converted)
-          venue: '1', // From the contract call
-          ticketPrice: BigInt('1000000000000000000'), // 1 ETH from contract call
-          maxSupply: BigInt(100), // From contract call
-          currentSupply: BigInt(0), // From contract call
-          organizer: address as `0x${string}`,
-          status: 0, // Active
-          createdAt: BigInt(1756108648), // From contract call
-          stats: {
-            totalRevenue: BigInt(0),
-            withdrawnRevenue: BigInt(0),
-            availableRevenue: BigInt(0),
-            ticketsSold: 0,
-            totalTickets: 100,
-          }
-        })
-      }
+      // Cache the fetched events
+      cacheEvents(organizerEvents)
 
       setEvents(organizerEvents)
+
+      console.log(`Fetched ${organizerEvents.length} events for organizer ${address}`)
     } catch (err) {
       console.error('Error fetching organizer events:', err)
-      setError(err as Error)
+
+      // Handle and format error
+      const handledError = handleError(err)
+      setError(new Error(handledError.userMessage))
+
+      // Fall back to cached events if available
+      if (cachedEvents && cachedEvents.length > 0) {
+        console.log('Falling back to cached events due to error')
+        setEvents(cachedEvents)
+      } else {
+        setEvents([])
+      }
     } finally {
       setIsLoading(false)
     }
-  }, [isContractReady, isConnected, address, contractAddress, nextEventId])
+  }, [isConnected, address, eventFetcher, hasCachedEvents, cachedEvents, cacheEvents, executeWithRetry, handleError])
 
   // Create new event
   const createEvent = useCallback(async (params: CreateEventParams): Promise<void> => {
@@ -140,14 +162,19 @@ export const useOrganizerEvents = (): UseOrganizerEventsReturn => {
 
     try {
       await contractCreateEvent(params)
-      // Refresh events after creation
-      await refetchNextEventId()
-      setTimeout(() => fetchOrganizerEvents(), 3000) // Wait for block confirmation
+
+      // Invalidate cache immediately
+      invalidateCache()
+
+      // Refresh events after creation with a delay for block confirmation
+      setTimeout(() => {
+        fetchOrganizerEvents(true) // Force refresh from blockchain
+      }, 3000)
     } catch (error) {
       console.error('Error creating event:', error)
       throw error
     }
-  }, [isContractReady, contractCreateEvent, refetchNextEventId, fetchOrganizerEvents])
+  }, [isContractReady, contractCreateEvent, invalidateCache, fetchOrganizerEvents])
 
   // Update event status
   const updateEventStatus = useCallback(async (eventId: number, status: number): Promise<void> => {
@@ -158,13 +185,19 @@ export const useOrganizerEvents = (): UseOrganizerEventsReturn => {
     try {
       const statusMap = ['ACTIVE', 'PAUSED', 'CANCELLED', 'COMPLETED'] as const
       await contractUpdateStatus(eventId, statusMap[status])
-      // Refresh events after status update
-      setTimeout(() => fetchOrganizerEvents(), 3000) // Wait for block confirmation
+
+      // Invalidate cache immediately
+      invalidateCache()
+
+      // Refresh events after status update with a delay for block confirmation
+      setTimeout(() => {
+        fetchOrganizerEvents(true) // Force refresh from blockchain
+      }, 3000)
     } catch (error) {
       console.error('Error updating event status:', error)
       throw error
     }
-  }, [isContractReady, contractUpdateStatus, fetchOrganizerEvents])
+  }, [isContractReady, contractUpdateStatus, invalidateCache, fetchOrganizerEvents])
 
   // Withdraw revenue
   const withdrawRevenue = useCallback(async (eventId: number): Promise<void> => {
@@ -174,24 +207,38 @@ export const useOrganizerEvents = (): UseOrganizerEventsReturn => {
 
     try {
       await contractWithdrawRevenue(eventId)
-      // Refresh events after withdrawal
-      setTimeout(() => fetchOrganizerEvents(), 3000) // Wait for block confirmation
+
+      // Invalidate cache immediately
+      invalidateCache()
+
+      // Refresh events after withdrawal with a delay for block confirmation
+      setTimeout(() => {
+        fetchOrganizerEvents(true) // Force refresh from blockchain
+      }, 3000)
     } catch (error) {
       console.error('Error withdrawing revenue:', error)
       throw error
     }
-  }, [isContractReady, contractWithdrawRevenue, fetchOrganizerEvents])
+  }, [isContractReady, contractWithdrawRevenue, invalidateCache, fetchOrganizerEvents])
 
-  // Refetch events
+  // Refetch events (force refresh from blockchain)
   const refetch = useCallback(() => {
-    refetchNextEventId()
-    fetchOrganizerEvents()
-  }, [refetchNextEventId, fetchOrganizerEvents])
+    invalidateCache()
+    fetchOrganizerEvents(true)
+  }, [invalidateCache, fetchOrganizerEvents])
 
   // Fetch events when dependencies change
   useEffect(() => {
     fetchOrganizerEvents()
   }, [fetchOrganizerEvents])
+
+  // Load cached events immediately on mount if available
+  useEffect(() => {
+    if (hasCachedEvents && cachedEvents && events.length === 0) {
+      console.log('Loading cached events on mount')
+      setEvents(cachedEvents)
+    }
+  }, [hasCachedEvents, cachedEvents, events.length])
 
   return {
     events,
@@ -201,5 +248,9 @@ export const useOrganizerEvents = (): UseOrganizerEventsReturn => {
     createEvent,
     updateEventStatus,
     withdrawRevenue,
+    // Cache-related properties
+    isUsingCache: hasCachedEvents && !isLoading,
+    cacheStats,
+    invalidateCache,
   }
 }

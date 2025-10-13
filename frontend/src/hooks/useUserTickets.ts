@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useReadContract } from 'wagmi'
+import { useChainId } from 'wagmi'
 import { useWallet } from './useWallet'
 import { useIngressosContract } from './useIngressosContract'
+import { useRetryLogic } from './useOrganizerEventsErrorHandler'
+import { EventFetcherFactory } from '../services'
 import type { Address } from 'viem'
+import type { EventFetcher } from '../services'
 
 export interface TicketMetadata {
   tokenId: number
@@ -30,41 +33,83 @@ export interface UseUserTicketsReturn {
 
 export const useUserTickets = (): UseUserTicketsReturn => {
   const { address, isConnected } = useWallet()
-  const { contractAddress, isContractReady } = useIngressosContract()
+  const { isContractReady, getTicketInfo, ownerOf, balanceOf } = useIngressosContract()
+  const chainId = useChainId()
 
   const [tickets, setTickets] = useState<TicketMetadata[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  const [eventFetcher, setEventFetcher] = useState<EventFetcher | null>(null)
 
-  // Get user's NFT balance
-  const {
-    data: balance,
-    isLoading: isBalanceLoading,
-    refetch: refetchBalance
-  } = useReadContract({
-    ...contractAddress ? {
-      address: contractAddress,
-      abi: [
-        {
-          name: 'balanceOf',
-          type: 'function',
-          stateMutability: 'view',
-          inputs: [{ name: 'owner', type: 'address' }],
-          outputs: [{ name: '', type: 'uint256' }],
-        }
-      ],
-      functionName: 'balanceOf',
-      args: address ? [address] : undefined,
-    } : {},
-    query: {
-      enabled: isContractReady && isConnected && !!address,
-    },
-  })
+  // Simple cache state for user tickets
+  const [ticketCache, setTicketCache] = useState<Map<string, {
+    data: TicketMetadata[]
+    timestamp: number
+    ttl: number
+  }>>(new Map())
 
-  // Fetch all user tickets
-  const fetchUserTickets = useCallback(async () => {
-    if (!isContractReady || !isConnected || !address || !balance) {
+  // Initialize retry logic with error handling
+  const { executeWithRetry, handleError } = useRetryLogic()
+
+  // Cache helper functions
+  const getCachedTickets = useCallback((cacheKey: string): TicketMetadata[] | null => {
+    const cached = ticketCache.get(cacheKey)
+    if (!cached) return null
+
+    const now = Date.now()
+    if (now - cached.timestamp > cached.ttl) {
+      ticketCache.delete(cacheKey)
+      return null
+    }
+
+    return cached.data
+  }, [ticketCache])
+
+  const setCachedTickets = useCallback((cacheKey: string, data: TicketMetadata[]) => {
+    setTicketCache(prev => new Map(prev.set(cacheKey, {
+      data,
+      timestamp: Date.now(),
+      ttl: 5 * 60 * 1000 // 5 minutes
+    })))
+  }, [])
+
+  // Initialize EventFetcher when chain changes
+  useEffect(() => {
+    if (!chainId) {
+      setEventFetcher(null)
+      return
+    }
+
+    try {
+      const fetcher = EventFetcherFactory.getInstance(chainId)
+      setEventFetcher(fetcher)
+    } catch (error) {
+      console.error('Failed to initialize EventFetcher:', error)
+      setError(error as Error)
+      setEventFetcher(null)
+    }
+  }, [chainId])
+
+  // Get user's NFT balance using the contract hook
+  const balanceQuery = balanceOf(address as Address)
+  const balance = balanceQuery.data
+  const isBalanceLoading = balanceQuery.isLoading
+  const refetchBalance = balanceQuery.refetch
+
+  // Fetch all user tickets with dynamic blockchain queries
+  const fetchUserTickets = useCallback(async (forceRefresh = false) => {
+    if (!isContractReady || !isConnected || !address || !eventFetcher) {
       setTickets([])
+      return
+    }
+
+    // Check cache first (unless force refresh)
+    const cacheKey = `user-tickets-${address}-${chainId}`
+    const cachedTickets = getCachedTickets(cacheKey)
+
+    if (!forceRefresh && cachedTickets) {
+      console.log('Using cached user tickets')
+      setTickets(cachedTickets)
       return
     }
 
@@ -72,78 +117,136 @@ export const useUserTickets = (): UseUserTicketsReturn => {
     setError(null)
 
     try {
-      // const userBalance = Number(balance) // TODO: Use for pagination or filtering
-      const ticketPromises: Promise<TicketMetadata | null>[] = []
+      console.log('Fetching user tickets from blockchain...')
 
-      // For now, we'll iterate through token IDs to find user's tickets
-      // In a production app, you'd want to use events or a subgraph for better performance
-      for (let tokenId = 1; tokenId <= 1000; tokenId++) {
-        ticketPromises.push(fetchTicketMetadata(tokenId))
+      // Get user's NFT balance to know how many tickets they have
+      const userBalance = balance ? Number(balance) : 0
+
+      if (userBalance === 0) {
+        setTickets([])
+        setIsLoading(false)
+        return
       }
 
-      const allTickets = await Promise.all(ticketPromises)
-      const userTickets = allTickets.filter((ticket): ticket is TicketMetadata =>
-        ticket !== null && ticket.currentOwner.toLowerCase() === address.toLowerCase()
+      // Fetch user tickets with retry logic
+      const userTickets = await executeWithRetry(
+        async () => {
+          const ticketPromises: Promise<TicketMetadata | null>[] = []
+
+          // We need to find which tokens the user owns
+          // Since we don't have a direct way to get user's token IDs,
+          // we'll check a reasonable range and filter by ownership
+          // In production, you'd use events or indexed data for efficiency
+          const maxTokensToCheck = Math.min(userBalance * 20, 2000) // Check more tokens than balance to account for transfers
+
+          for (let tokenId = 1; tokenId <= maxTokensToCheck; tokenId++) {
+            ticketPromises.push(fetchTicketMetadata(tokenId))
+          }
+
+          const allTickets = await Promise.all(ticketPromises)
+          const ownedTickets = allTickets.filter((ticket): ticket is TicketMetadata =>
+            ticket !== null && ticket.currentOwner.toLowerCase() === address.toLowerCase()
+          )
+
+          // Limit to actual balance to avoid inconsistencies
+          return ownedTickets.slice(0, userBalance)
+        },
+        3 // Max 3 retries
       )
 
+      // Cache the fetched tickets
+      setCachedTickets(cacheKey, userTickets)
+
       setTickets(userTickets)
+
+      console.log(`Fetched ${userTickets.length} tickets for user ${address}`)
     } catch (err) {
       console.error('Error fetching user tickets:', err)
-      setError(err as Error)
+
+      // Handle and format error
+      const handledError = handleError(err)
+      setError(new Error(handledError.userMessage))
+
+      // Fall back to cached tickets if available
+      if (cachedTickets && cachedTickets.length > 0) {
+        console.log('Falling back to cached tickets due to error')
+        setTickets(cachedTickets)
+      } else {
+        setTickets([])
+      }
     } finally {
       setIsLoading(false)
     }
-  }, [isContractReady, isConnected, address, balance])
+  }, [isContractReady, isConnected, address, eventFetcher, balance, chainId, getCachedTickets, setCachedTickets, executeWithRetry, handleError])
 
-  // Fetch individual ticket metadata
+  // Fetch individual ticket metadata with dynamic event data
   const fetchTicketMetadata = useCallback(async (tokenId: number): Promise<TicketMetadata | null> => {
-    if (!isContractReady) return null
+    if (!isContractReady || !eventFetcher) return null
 
     try {
-      // This would normally use the contract's ownerOf function
-      // For now, we'll simulate the data structure
-      const ticketInfo = {
-        eventId: 1,
-        ticketNumber: 1,
-        purchasePrice: BigInt('100000000000000000'), // 0.1 ETH
-        purchaseDate: Math.floor(Date.now() / 1000),
-        originalBuyer: address as Address,
-      }
+      // First, check if the token exists and get its owner
+      const ownerQuery = ownerOf(tokenId)
+      const currentOwner = ownerQuery.data as Address
 
-      const eventDetails = {
-        name: 'Sample Event',
-        description: 'This is a sample event',
-        date: Math.floor(Date.now() / 1000) + 86400, // Tomorrow
-        venue: 'Sample Venue',
-        status: 0, // Active
+      if (!currentOwner) return null
+
+      // Get ticket info from contract
+      const ticketQuery = getTicketInfo(tokenId)
+      const ticketInfo = ticketQuery.data
+
+      if (!ticketInfo) return null
+
+      // Parse ticket info from contract response
+      const [eventId, ticketNumber, purchasePrice, purchaseDate, originalBuyer] = ticketInfo as [
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        Address
+      ]
+
+      // Fetch real event details using EventFetcher
+      const eventDetails = await eventFetcher.fetchEventDetails(Number(eventId))
+
+      if (!eventDetails) {
+        return null // Event doesn't exist
       }
 
       return {
         tokenId,
-        eventId: ticketInfo.eventId,
-        ticketNumber: ticketInfo.ticketNumber,
-        purchasePrice: ticketInfo.purchasePrice,
-        purchaseDate: ticketInfo.purchaseDate,
-        originalBuyer: ticketInfo.originalBuyer,
-        currentOwner: address as Address,
+        eventId: Number(eventId),
+        ticketNumber: Number(ticketNumber),
+        purchasePrice,
+        purchaseDate: Number(purchaseDate),
+        originalBuyer,
+        currentOwner,
         eventName: eventDetails.name,
         eventDescription: eventDetails.description,
-        eventDate: eventDetails.date,
+        eventDate: Number(eventDetails.date),
         eventVenue: eventDetails.venue,
         eventStatus: eventDetails.status,
-        isTransferred: ticketInfo.originalBuyer.toLowerCase() !== address?.toLowerCase(),
+        isTransferred: originalBuyer.toLowerCase() !== currentOwner.toLowerCase(),
       }
     } catch (err) {
       // Token doesn't exist or user doesn't own it
       return null
     }
-  }, [isContractReady, address])
+  }, [isContractReady, eventFetcher, ownerOf, getTicketInfo])
 
-  // Refetch tickets
+  // Refetch tickets (force refresh from blockchain)
   const refetch = useCallback(() => {
     refetchBalance()
-    fetchUserTickets()
-  }, [refetchBalance, fetchUserTickets])
+
+    // Invalidate cache and force refresh
+    const cacheKey = `user-tickets-${address}-${chainId}`
+    setTicketCache(prev => {
+      const newCache = new Map(prev)
+      newCache.delete(cacheKey)
+      return newCache
+    })
+
+    fetchUserTickets(true)
+  }, [refetchBalance, fetchUserTickets, address, chainId])
 
   // Get ticket by ID
   const getTicketById = useCallback((tokenId: number): TicketMetadata | undefined => {

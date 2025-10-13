@@ -31,6 +31,20 @@ vi.mock('wagmi', () => ({
     getGasPrice: vi.fn(),
     estimateFeesPerGas: vi.fn(),
   })),
+  useReadContract: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+  useWriteContract: vi.fn(() => ({
+    writeContract: vi.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+  })),
 }))
 
 // Mock environment variables

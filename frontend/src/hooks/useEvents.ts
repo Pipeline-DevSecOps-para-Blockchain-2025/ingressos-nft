@@ -1,10 +1,13 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
-import { useIngressosContract } from './useIngressosContract'
-import { useState, useCallback, useMemo } from 'react'
-import type { EventDetails } from './useIngressosContract'
+import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useChainId } from 'wagmi'
+import { useEventCache } from './useEventCache'
+import { useRetryLogic } from './useOrganizerEventsErrorHandler'
+import { EventFetcherFactory } from '../services'
+import type { EventFetcher } from '../services'
+import type { OrganizerEventWithStats } from './useOrganizerEvents'
 
-export interface EventWithId extends EventDetails {
-  eventId: number
+export interface EventWithId extends OrganizerEventWithStats {
+  // EventWithId is now an alias for OrganizerEventWithStats for consistency
 }
 
 export interface EventFilters {
@@ -47,100 +50,113 @@ export interface UseEventsReturn {
   // Utilities
   refetch: () => void
   totalEvents: number
+
+  // Cache-related properties
+  isUsingCache: boolean
+  cacheStats: any
 }
 
-const EVENTS_PER_PAGE = 10
+const EVENTS_PER_PAGE = 20
 
 export const useEvents = (): UseEventsReturn => {
-  const { getNextEventId, isContractReady } = useIngressosContract()
+  const chainId = useChainId()
   const [filters, setFilters] = useState<EventFilters>({})
+  const [events, setEvents] = useState<EventWithId[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [eventFetcher, setEventFetcher] = useState<EventFetcher | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
-  // Get the total number of events
-  const nextEventIdQuery = getNextEventId()
-  const totalEvents = nextEventIdQuery.data ? Number(nextEventIdQuery.data) - 1 : 0
 
-  // Fetch events with pagination
+  // Initialize event cache
   const {
-    data: eventsData,
-    isLoading,
-    error,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-    refetch,
-  } = useInfiniteQuery({
-    queryKey: ['events'],
-    queryFn: async ({ pageParam = 1 }: { pageParam?: number }) => {
-      if (!isContractReady || totalEvents === 0) {
-        return { events: [], hasMore: false, nextPage: undefined }
-      }
-
-      const startId = pageParam as number
-      const endId = Math.min(startId + EVENTS_PER_PAGE - 1, totalEvents)
-      const events: EventWithId[] = []
-
-      // Fetch events in parallel
-      const eventPromises = []
-      for (let eventId = startId; eventId <= endId; eventId++) {
-        eventPromises.push(
-          fetchEventById(eventId).catch((error) => {
-            console.warn(`Failed to fetch event ${eventId}:`, error)
-            return null
-          })
-        )
-      }
-
-      const eventResults = await Promise.all(eventPromises)
-
-      // Filter out failed requests and add to events array
-      eventResults.forEach((event) => {
-        if (event) {
-          events.push(event)
-        }
-      })
-
-      return {
-        events,
-        hasMore: endId < totalEvents,
-        nextPage: endId < totalEvents ? endId + 1 : undefined,
-      }
-    },
-    getNextPageParam: (lastPage: any) => lastPage?.nextPage,
-    initialPageParam: 1,
-    enabled: isContractReady && totalEvents > 0,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    getCachedEvents,
+    setCachedEvents,
+    hasCachedEvents,
+    cacheStats,
+  } = useEventCache({
+    ttl: 10 * 60 * 1000, // 10 minutes cache for all events
+    enableAutoInvalidation: true,
   })
 
-  // Helper function to fetch a single event
-  const fetchEventById = async (eventId: number): Promise<EventWithId> => {
-    // Since we can't use hooks in async functions, we'll need to handle this differently
-    // For now, we'll create a simple fetch mechanism
-    // In a real implementation, you might want to use a different approach
+  // Initialize retry logic with error handling
+  const { executeWithRetry, handleError } = useRetryLogic()
 
-    // This is a simplified version - in practice you'd want to integrate with the contract properly
-    const mockEvent: EventWithId = {
-      eventId,
-      name: `Event ${eventId}`,
-      description: `Description for event ${eventId}`,
-      date: BigInt(Math.floor(Date.now() / 1000) + 86400 * eventId), // Future dates
-      venue: `Venue ${eventId}`,
-      ticketPrice: BigInt('100000000000000000'), // 0.1 ETH
-      maxSupply: BigInt(100),
-      currentSupply: BigInt(Math.floor(Math.random() * 50)),
-      organizer: '0x1234567890123456789012345678901234567890' as `0x${string}`,
-      status: Math.floor(Math.random() * 4),
-      createdAt: BigInt(Math.floor(Date.now() / 1000) - 86400 * eventId),
+  // Initialize EventFetcher when chain changes
+  useEffect(() => {
+    if (!chainId) {
+      setEventFetcher(null)
+      return
     }
 
-    return mockEvent
-  }
+    try {
+      const fetcher = EventFetcherFactory.getInstance(chainId)
+      setEventFetcher(fetcher)
+    } catch (error) {
+      console.error('Failed to initialize EventFetcher:', error)
+      setError(error as Error)
+      setEventFetcher(null)
+    }
+  }, [chainId])
 
-  // Flatten all pages into a single events array
-  const events = useMemo(() => {
-    if (!eventsData?.pages) return []
-    return eventsData.pages.flatMap((page: any) => page.events)
-  }, [eventsData])
+  // Dynamic event fetching with cache integration
+  const fetchAllEvents = useCallback(async (forceRefresh = false) => {
+    if (!eventFetcher) {
+      setEvents([])
+      return
+    }
+
+    // Check cache first (unless force refresh)
+    const cacheKey = `all-events-${chainId}`
+    const cachedAllEvents = getCachedEvents(cacheKey)
+
+    if (!forceRefresh && cachedAllEvents) {
+      console.log('Using cached all events')
+      setEvents(cachedAllEvents)
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      console.log('Fetching all events from blockchain...')
+
+      // Fetch all events with retry logic
+      const allEvents = await executeWithRetry(
+        () => eventFetcher.fetchAllEvents({ limit: 100 }), // Fetch up to 100 events
+        3 // Max 3 retries
+      )
+
+      // Cache the fetched events
+      setCachedEvents(cacheKey, allEvents)
+
+      setEvents(allEvents)
+
+      console.log(`Fetched ${allEvents.length} total events`)
+    } catch (err) {
+      console.error('Error fetching all events:', err)
+
+      // Handle and format error
+      const handledError = handleError(err)
+      setError(new Error(handledError.userMessage))
+
+      // Fall back to cached events if available
+      if (cachedAllEvents && cachedAllEvents.length > 0) {
+        console.log('Falling back to cached events due to error')
+        setEvents(cachedAllEvents)
+      } else {
+        setEvents([])
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [eventFetcher, chainId, getCachedEvents, setCachedEvents, executeWithRetry, handleError])
+
+  // Fetch events when dependencies change
+  useEffect(() => {
+    fetchAllEvents()
+  }, [fetchAllEvents])
 
   // Apply filters to events
   const filteredEvents = useMemo(() => {
@@ -189,6 +205,24 @@ export const useEvents = (): UseEventsReturn => {
     return filtered
   }, [events, filters])
 
+  // Pagination logic for filtered events
+  const paginatedEvents = useMemo(() => {
+    const startIndex = (currentPage - 1) * EVENTS_PER_PAGE
+    const endIndex = startIndex + EVENTS_PER_PAGE
+    return filteredEvents.slice(0, endIndex) // Show all events up to current page
+  }, [filteredEvents, currentPage])
+
+  // Pagination controls
+  const hasNextPage = useMemo(() => {
+    return filteredEvents.length > currentPage * EVENTS_PER_PAGE
+  }, [filteredEvents.length, currentPage])
+
+  const fetchNextPage = useCallback(() => {
+    if (hasNextPage) {
+      setCurrentPage(prev => prev + 1)
+    }
+  }, [hasNextPage])
+
   // Get individual event
   const getEvent = useCallback((eventId: number) => {
     const event = events.find(e => e.eventId === eventId)
@@ -199,15 +233,27 @@ export const useEvents = (): UseEventsReturn => {
     }
   }, [events, isLoading, error])
 
+  // Refetch events (force refresh from blockchain)
+  const refetch = useCallback(() => {
+    setCurrentPage(1) // Reset pagination
+    fetchAllEvents(true)
+  }, [fetchAllEvents])
+
+  // Check if using cache
+  const isUsingCache = useMemo(() => {
+    const cacheKey = `all-events-${chainId}`
+    return hasCachedEvents(cacheKey) && !isLoading
+  }, [chainId, hasCachedEvents, isLoading])
+
   return {
     // Event data
-    events,
+    events: paginatedEvents,
     isLoading,
     error,
 
     // Pagination
-    hasNextPage: hasNextPage || false,
-    isFetchingNextPage,
+    hasNextPage,
+    isFetchingNextPage: false, // We don't have async pagination anymore
     fetchNextPage,
 
     // Filtering and search
@@ -220,6 +266,10 @@ export const useEvents = (): UseEventsReturn => {
 
     // Utilities
     refetch,
-    totalEvents,
+    totalEvents: filteredEvents.length,
+
+    // Cache-related properties
+    isUsingCache,
+    cacheStats,
   }
 }
