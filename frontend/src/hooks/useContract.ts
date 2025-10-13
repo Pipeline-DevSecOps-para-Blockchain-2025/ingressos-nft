@@ -1,6 +1,6 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { useChainId } from 'wagmi'
-import { INGRESSOS_ABI, INGRESSOS_CONTRACT_ADDRESS, type SupportedChainId } from '../contracts'
+import { INGRESSOS_ABI, INGRESSOS_CONTRACT_ADDRESS } from '../contracts'
 import { useCallback, useMemo } from 'react'
 import type { Address } from 'viem'
 
@@ -35,11 +35,10 @@ export const useContract = (): UseContractReturn => {
   const { writeContract, writeContractAsync, isPending: isWritePending, error: writeError } = useWriteContract()
 
   // Get contract address for current chain
-  const contractAddress = useMemo(() => {
-    const supportedChainId = chainId as SupportedChainId
-    const address = INGRESSOS_CONTRACT_ADDRESS[supportedChainId]
+  const contractAddress = useMemo((): Address | null => {
+    const address = INGRESSOS_CONTRACT_ADDRESS[chainId]
     return address && address !== '0x0000000000000000000000000000000000000000'
-      ? (address as Address)
+      ? address
       : null
   }, [chainId])
 
@@ -57,7 +56,7 @@ export const useContract = (): UseContractReturn => {
   }, [contractAddress, chainId])
 
   // Wait for transaction helper
-  const waitForTransaction = useCallback((hash: `0x${string}`) => {
+  const waitForTransaction = useCallback((hash: Address) => {
     return useWaitForTransactionReceipt({ hash })
   }, [])
 

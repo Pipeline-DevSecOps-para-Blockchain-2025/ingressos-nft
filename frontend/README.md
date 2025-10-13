@@ -46,19 +46,18 @@ src/
 ## Dependencies Installed
 
 ### Core Web3 Libraries
-- `ethers@^6.15.0` - Ethereum library for blockchain interactions
-- `wagmi@^2.17.1` - React hooks for Ethereum
-- `viem@^2.37.6` - TypeScript interface for Ethereum
-- `@wagmi/core@^2.21.0` - Core wagmi functionality
-- `@wagmi/connectors@^5.10.1` - Wallet connectors
+- `wagmi@^2.18.0` - React hooks for Ethereum
+- `viem@^2.38.1` - TypeScript interface for Ethereum
+- `@wagmi/core` - Core wagmi functionality
+- `@wagmi/connectors` - Wallet connectors
 
 ### State Management & Data Fetching
-- `@tanstack/react-query@^5.89.0` - Data fetching and caching
+- `@tanstack/react-query@^5.90.2` - Data fetching and caching
 - `zustand@^5.0.8` - Lightweight state management
 
 ### Styling
-- `tailwindcss@^4.1.13` - Utility-first CSS framework
-- `@tailwindcss/postcss@^4.1.13` - PostCSS plugin for Tailwind CSS v4
+- `tailwindcss@^4.1.14` - Utility-first CSS framework
+- `@tailwindcss/postcss@^4.1.14` - PostCSS plugin for Tailwind CSS v4
 - `autoprefixer@^10.4.21` - CSS vendor prefixing
 
 ## Wallet Connection Infrastructure ✅
