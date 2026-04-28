@@ -82,6 +82,7 @@ def formatPromLabels(Map labels) {
     parts.join(',')
 }
 
+@NonCPS
 def normalizeContractPath(String path) {
     if (!path) {
         return ''
@@ -295,6 +296,11 @@ def parseMythrilReports(List reportEntries, Map manifest = [:]) {
     }
 
     findings
+}
+
+@NonCPS
+def parseJsonMap(String json) {
+    new groovy.json.JsonSlurper().parseText(json) as Map
 }
 
 @NonCPS
@@ -561,9 +567,7 @@ pipeline {
 
                 def mythrilManifest = [:]
                 if (fileExists("${reportsDir}/mythril/manifest.json")) {
-                    mythrilManifest = new groovy.json.JsonSlurper().parseText(
-                        readFile("${reportsDir}/mythril/manifest.json")
-                    ) as Map
+                    mythrilManifest = parseJsonMap(readFile("${reportsDir}/mythril/manifest.json"))
                 }
 
                 def mythrilEntries = []
