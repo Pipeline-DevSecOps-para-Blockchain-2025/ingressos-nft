@@ -197,9 +197,7 @@ def loadPreviousFindings() {
 
     def mythrilManifest = [:]
     if (fileExists("previous-reports/${reportsDir}/mythril/manifest.json")) {
-        mythrilManifest = new groovy.json.JsonSlurper().parseText(
-            readFile("previous-reports/${reportsDir}/mythril/manifest.json")
-        ) as Map
+        mythrilManifest = parseJsonMap(readFile("previous-reports/${reportsDir}/mythril/manifest.json"))
     }
 
     def mythrilEntries = []
