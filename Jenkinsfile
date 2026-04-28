@@ -299,6 +299,27 @@ def parseMythrilReports(List reportEntries, Map manifest = [:]) {
 }
 
 @NonCPS
+def parseMythrilErrors(List reportEntries, Map manifest = [:]) {
+    def errors = []
+
+    reportEntries.each { entry ->
+        def srcPath = manifest[entry.name] ?: entry.name.replaceFirst(/\.json$/, '')
+        def normalizedPath = normalizeContractPath(srcPath)
+
+        def data = new groovy.json.JsonSlurper().parseText(entry.content)
+        def logs = data instanceof List ? data[0]?.meta?.logs : data?.meta?.logs
+        logs?.findAll { it.level?.toLowerCase() == 'error' }?.each { log ->
+            errors << [
+                file   : normalizedPath,
+                message: log.msg?.take(1024) ?: 'Unknown Mythril execution error',
+            ]
+        }
+    }
+
+    errors
+}
+
+@NonCPS
 def toSerializableJson(Object value) {
     if (value instanceof Map) {
         def copy = [:]
@@ -593,9 +614,10 @@ pipeline {
                         } else {
                             echo "Skipping empty mythril report: ${f.path}"
                         }
-                    }
+                }
 
                 def mythrilFindings = parseMythrilReports(mythrilEntries, mythrilManifest)
+                def mythrilErrors = parseMythrilErrors(mythrilEntries, mythrilManifest)
                 def summary = buildSummary(slitherFindings, mythrilFindings)
 
                 echo "=== SAST Results ===\n${summary.markdown}"
@@ -620,12 +642,19 @@ pipeline {
                     )
                 }
 
-                if (mythrilFindings) {
+                if (mythrilEntries || mythrilFindings || mythrilErrors) {
+                    def mythrilSummary = summary.mythrilMarkdown
+                    if (mythrilErrors) {
+                        def errorLines = mythrilErrors.collect { err ->
+                            "- `${err.file.replaceFirst(/^contracts\//, '')}`: ${err.message.replaceAll(/\s+/, ' ').take(300)}"
+                        }
+                        mythrilSummary += "\n\n### Execution Errors\n" + errorLines.join('\n')
+                    }
                     publishChecks(
                         name       : 'Mythril SAST',
                         title      : "Mythril: ${summary.mythril.total} findings",
-                        summary    : summary.mythrilMarkdown,
-                        conclusion : 'NEUTRAL',
+                        summary    : mythrilSummary,
+                        conclusion : mythrilErrors ? 'FAILURE' : 'NEUTRAL',
                         annotations: prioritizeFindings(mythrilFindings, maxAnnotations).collect { f ->
                             [
                                 path           : f.file,
