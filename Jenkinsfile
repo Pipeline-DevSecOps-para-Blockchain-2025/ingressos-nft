@@ -299,8 +299,21 @@ def parseMythrilReports(List reportEntries, Map manifest = [:]) {
 }
 
 @NonCPS
+def toSerializableJson(Object value) {
+    if (value instanceof Map) {
+        def copy = [:]
+        value.each { k, v -> copy[k] = toSerializableJson(v) }
+        return copy
+    }
+    if (value instanceof List) {
+        return value.collect { item -> toSerializableJson(item) }
+    }
+    return value
+}
+
+@NonCPS
 def parseJsonMap(String json) {
-    new groovy.json.JsonSlurper().parseText(json) as Map
+    toSerializableJson(new groovy.json.JsonSlurper().parseText(json)) as Map
 }
 
 @NonCPS
