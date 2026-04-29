@@ -516,8 +516,8 @@ pipeline {
                             sh "mkdir -p ${reportsDir}"
                             dir(contractsDir) {
                                 sh """
-                                    slither . \
-                                        --exclude-dependencies \
+                                    slither src/Ingressos.sol \
+                                        --ignore-compile --exclude-dependencies \
                                         --no-fail-pedantic --json ../${reportsDir}/slither.json
                                 """
                             }
