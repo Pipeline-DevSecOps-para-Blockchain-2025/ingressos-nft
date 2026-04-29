@@ -548,25 +548,28 @@ pipeline {
                             def branches = [:]
 
                             files.each { filePath ->
+                                def localPath = filePath.replaceFirst(/^${contractsDir}\//, '')
                                 def shortName = filePath.replaceAll(/[\\\\\\/]/, '__')
                                 def safeName = shortName.replaceAll(/[^A-Za-z0-9_.-]/, '_') + '.json'
                                 manifest[safeName] = filePath
 
                                 branches[filePath] = {
                                     reportCheck {
-                                        script {
-                                            def exitCode = sh(
-                                                script: """
-                                                    bash -o pipefail -c "
-                                                        myth analyze '${filePath}' \
-                                                            --solv ${solidityVersion} \
-                                                            --solc-json ${contractsDir}/.solc-config.json \
-                                                            --outform jsonv2 | tee ${reportsDir}/mythril/${safeName}
-                                                    "
-                                                """,
-                                                returnStatus: true
-                                            )
-                                            println "Mythril report for ${filePath}: ${exitCode}"
+                                        dir(contractsDir) {
+                                            script {
+                                                def exitCode = sh(
+                                                    script: """
+                                                        bash -o pipefail -c "
+                                                            myth analyze '${localPath}' \
+                                                                --solv ${solidityVersion} \
+                                                                --solc-json .solc-config.json \
+                                                                --outform jsonv2 | tee ../${reportsDir}/mythril/${safeName}
+                                                        "
+                                                    """,
+                                                    returnStatus: true
+                                                )
+                                                println "Mythril report for ${filePath}: ${exitCode}"
+                                            }
                                         }
                                     }
                                 }
