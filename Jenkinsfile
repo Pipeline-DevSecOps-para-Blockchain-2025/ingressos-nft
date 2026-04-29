@@ -517,7 +517,7 @@ pipeline {
                             dir(contractsDir) {
                                 sh """
                                     slither . \
-                                        --ignore-compile --exclude-dependencies \
+                                        --exclude-dependencies \
                                         --no-fail-pedantic --json ../${reportsDir}/slither.json
                                 """
                             }
