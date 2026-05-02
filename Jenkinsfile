@@ -227,6 +227,14 @@ def sendNotification(String subject, String body) {
     }
 }
 
+def hasWorkspaceContext() {
+    try {
+        return getContext(hudson.FilePath) != null
+    } catch (ignored) {
+        return false
+    }
+}
+
 @NonCPS
 def parseSlitherReport(String json) {
     def data = new groovy.json.JsonSlurper().parseText(json)
@@ -556,19 +564,21 @@ pipeline {
                                 branches[filePath] = {
                                     reportCheck {
                                         dir(contractsDir) {
-                                            script {
-                                                def exitCode = sh(
-                                                    script: """
-                                                        bash -o pipefail -c "
-                                                            myth analyze '${localPath}' \
-                                                                --solv ${solidityVersion} \
-                                                                --solc-json .solc-config.json \
-                                                                --outform jsonv2 | tee ../${reportsDir}/mythril/${safeName}
-                                                        "
-                                                    """,
-                                                    returnStatus: true
-                                                )
-                                                println "Mythril report for ${filePath}: ${exitCode}"
+                                            timeout(time: 20, unit: 'MINUTES') {
+                                                script {
+                                                    def exitCode = sh(
+                                                        script: """
+                                                            bash -o pipefail -c "
+                                                                myth analyze '${localPath}' \
+                                                                    --solv ${solidityVersion} \
+                                                                    --solc-json .solc-config.json \
+                                                                    --outform jsonv2 | tee ../${reportsDir}/mythril/${safeName}
+                                                            "
+                                                        """,
+                                                        returnStatus: true
+                                                    )
+                                                    println "Mythril report for ${filePath}: ${exitCode}"
+                                                }
                                             }
                                         }
                                     }
@@ -591,10 +601,22 @@ pipeline {
 
     post {
         always {
+            script {
+                if (!hasWorkspaceContext()) {
+                    echo 'Workspace context unavailable in post actions; skipping unstash, report parsing, and artifact archiving.'
+                    return
+                }
+            }
+
             catchError { unstash 'slither-report' }
             catchError { unstash 'mythril-report' }
 
             script {
+                if (!hasWorkspaceContext()) {
+                    echo 'Workspace context unavailable after unstash attempts; skipping report parsing.'
+                    return
+                }
+
                 def slitherFindings = []
                 if (fileExists("${reportsDir}/slither.json")) {
                     slitherFindings = parseSlitherReport(readFile("${reportsDir}/slither.json"))
@@ -720,8 +742,15 @@ pipeline {
                 }
             }
 
-            archiveArtifacts artifacts: "${reportsDir}/**", allowEmptyArchive: true
-            cleanWs()
+            script {
+                if (!hasWorkspaceContext()) {
+                    echo 'Workspace context unavailable; skipping archive and cleanup steps that require a FilePath.'
+                    return
+                }
+
+                archiveArtifacts artifacts: "${reportsDir}/**", allowEmptyArchive: true
+                cleanWs()
+            }
         }
     }
 }
