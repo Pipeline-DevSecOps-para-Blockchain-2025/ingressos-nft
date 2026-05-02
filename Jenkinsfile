@@ -28,6 +28,22 @@ def extractSettingsJson(String json) {
     return groovy.json.JsonOutput.toJson([remappings: config.remappings])
 }
 
+@NonCPS
+def buildMythrilErrorReport(String message) {
+    groovy.json.JsonOutput.toJson([
+        [
+            issues: [],
+            meta  : [
+                logs: [[
+                    level : 'error',
+                    hidden: false,
+                    msg   : message,
+                ]]
+            ]
+        ]
+    ])
+}
+
 def mapSeverity(String severity) {
     switch (severity?.toLowerCase()) {
         case 'high':
@@ -564,21 +580,29 @@ pipeline {
                                 branches[filePath] = {
                                     reportCheck {
                                         dir(contractsDir) {
-                                            timeout(time: 20, unit: 'MINUTES') {
-                                                script {
-                                                    def exitCode = sh(
-                                                        script: """
-                                                            bash -o pipefail -c "
-                                                                myth analyze '${localPath}' \
-                                                                    --solv ${solidityVersion} \
-                                                                    --solc-json .solc-config.json \
-                                                                    --outform jsonv2 | tee ../${reportsDir}/mythril/${safeName}
-                                                            "
-                                                        """,
-                                                        returnStatus: true
-                                                    )
-                                                    println "Mythril report for ${filePath}: ${exitCode}"
+                                            try {
+                                                timeout(time: 20, unit: 'MINUTES') {
+                                                    script {
+                                                        def exitCode = sh(
+                                                            script: """
+                                                                bash -o pipefail -c "
+                                                                    myth analyze '${localPath}' \
+                                                                        --solv ${solidityVersion} \
+                                                                        --solc-json .solc-config.json \
+                                                                        --outform jsonv2 | tee ../${reportsDir}/mythril/${safeName}
+                                                                "
+                                                            """,
+                                                            returnStatus: true
+                                                        )
+                                                        println "Mythril report for ${filePath}: ${exitCode}"
+                                                    }
                                                 }
+                                            } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                                                writeFile(
+                                                    file: "../${reportsDir}/mythril/${safeName}",
+                                                    text: buildMythrilErrorReport("Mythril timed out after 20 minutes while analyzing ${localPath}.")
+                                                )
+                                                throw e
                                             }
                                         }
                                     }
@@ -587,12 +611,14 @@ pipeline {
 
                             writeJSON(file: "${reportsDir}/mythril/manifest.json", json: manifest, pretty: 2)
 
-                            if (!branches.isEmpty()) {
-                                parallel branches
+                            try {
+                                if (!branches.isEmpty()) {
+                                    parallel branches
+                                }
+                            } finally {
+                                stash name: 'mythril-report', includes: "${reportsDir}/mythril/*.json", allowEmpty: true
                             }
                         }
-
-                        stash name: 'mythril-report', includes: "${reportsDir}/mythril/*.json", allowEmpty: true
                     }
                 }
             }
