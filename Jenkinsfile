@@ -538,13 +538,14 @@ pipeline {
                     steps {
                         reportCheck {
                             sh "mkdir -p ${reportsDir}"
-                            dir(contractsDir) {
-                                sh """
-                                    slither src/Ingressos.sol \
-                                        --ignore-compile --exclude-dependencies \
-                                        --no-fail-pedantic --json ../${reportsDir}/slither.json
-                                """
-                            }
+                            sh """
+                                slither ${contractsDir}/src/Ingressos.sol \
+                                    --compile-force-framework solc \
+                                    --solc-remaps "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/ forge-std/=lib/forge-std/src/" \
+                                    --solc-args "--base-path ${contractsDir} --include-path ${contractsDir}/lib --evm-version prague" \
+                                    --exclude-dependencies \
+                                    --no-fail-pedantic --json ${reportsDir}/slither.json
+                            """
                             stash name: 'slither-report', includes: "${reportsDir}/slither.json", allowEmpty: true
                         }
                     }
@@ -580,8 +581,8 @@ pipeline {
                                                         def exitCode = sh(
                                                             script: """
                                                                 bash -o pipefail -c 'docker run --rm \
-                                                                    -v "\${WORKSPACE}:/workspace" \
-                                                                    -w /workspace/${contractsDir} \
+                                                                    --volumes-from "\$HOSTNAME" \
+                                                                    -w "\$WORKSPACE/${contractsDir}" \
                                                                     --entrypoint myth \
                                                                     ${images.mythril} \
                                                                     analyze "${localPath}" \
