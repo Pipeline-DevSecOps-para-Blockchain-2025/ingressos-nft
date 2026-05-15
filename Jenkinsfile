@@ -551,13 +551,6 @@ pipeline {
                 }
 
                 stage('Mythril') {
-                    agent {
-                        docker {
-                            image images.mythril
-                            args '--entrypoint='
-                            reuseNode true
-                        }
-                    }
                     steps {
                         script {
                             def config = readFile(file: "${contractsDir}/.forge-config.json")
@@ -565,9 +558,10 @@ pipeline {
                         }
 
                         sh "mkdir -p ${reportsDir}/mythril"
+                        sh "docker pull ${images.mythril}"
 
                         script {
-                            def files = findFiles(glob: "${contractsDir}/src/**/*.sol").collect { it.path }
+                            def files = findFiles(glob: "${contractsDir}/src/Ingressos.sol").collect { it.path }
                             def manifest = [:]
                             def branches = [:]
 
@@ -585,16 +579,26 @@ pipeline {
                                                     script {
                                                         def exitCode = sh(
                                                             script: """
-                                                                bash -o pipefail -c "
-                                                                    myth analyze '${localPath}' \
+                                                                bash -o pipefail -c 'docker run --rm \
+                                                                    -v "\${WORKSPACE}:/workspace" \
+                                                                    -w /workspace/${contractsDir} \
+                                                                    --entrypoint myth \
+                                                                    ${images.mythril} \
+                                                                    analyze "${localPath}" \
                                                                         --solv ${solidityVersion} \
                                                                         --solc-json .solc-config.json \
-                                                                        --outform jsonv2 | tee ../${reportsDir}/mythril/${safeName}
-                                                                "
+                                                                        --outform jsonv2 \
+                                                                    | tee ../${reportsDir}/mythril/${safeName}'
                                                             """,
                                                             returnStatus: true
                                                         )
                                                         println "Mythril report for ${filePath}: ${exitCode}"
+                                                        if (exitCode != 0 && (!fileExists("../${reportsDir}/mythril/${safeName}") || !readFile("../${reportsDir}/mythril/${safeName}").trim())) {
+                                                            writeFile(
+                                                                file: "../${reportsDir}/mythril/${safeName}",
+                                                                text: buildMythrilErrorReport("Mythril Docker analysis exited with code ${exitCode} while analyzing ${localPath}.")
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
