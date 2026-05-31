@@ -7,6 +7,7 @@ images = [
 contractsDir = 'contracts'
 reportsDir = 'reports'
 solidityVersion = '0.8.30'
+coverageThreshold = 80.0
 
 findingSeverities = ['High', 'Medium', 'Low', 'Informational', 'Optimization']
 maxAnnotations = 50
@@ -53,6 +54,51 @@ def mapSeverity(String severity) {
         default:
             return 'NOTICE'
     }
+}
+
+@NonCPS
+def parseForgeCoverageTotals(String text) {
+    def totalLine = text.readLines().find { line -> line.contains('| Total') }
+    if (!totalLine) {
+        return [:]
+    }
+
+    def cells = totalLine.split(/\|/)
+        .collect { it.trim() }
+        .findAll { it }
+
+    if (cells.size() < 5 || cells[0] != 'Total') {
+        return [:]
+    }
+
+    def pct = { String value ->
+        def matcher = value =~ /([0-9]+(?:\.[0-9]+)?)%/
+        matcher.find() ? new BigDecimal(matcher.group(1)) : null
+    }
+
+    [
+        lines     : pct(cells[1]),
+        statements: pct(cells[2]),
+        branches  : pct(cells[3]),
+        functions : pct(cells[4]),
+    ].findAll { _, value -> value != null }
+}
+
+def enforceCoverageGate(String text, BigDecimal threshold) {
+    def totals = parseForgeCoverageTotals(text)
+    if (totals.isEmpty()) {
+        error 'Unable to parse Forge coverage totals from coverage summary.'
+    }
+
+    def failures = totals.findAll { _, value -> value < threshold }
+    def formatted = totals.collect { metric, value -> "${metric}: ${value}%" }.join(', ')
+
+    if (failures) {
+        def failingMetrics = failures.collect { metric, value -> "${metric}: ${value}%" }.join(', ')
+        error "Coverage gate failed. Required >= ${threshold}% for every total metric. Totals: ${formatted}. Failing: ${failingMetrics}."
+    }
+
+    echo "Coverage gate passed. Required >= ${threshold}%. Totals: ${formatted}."
 }
 
 def pushMetrics(String url, String body) {
@@ -522,6 +568,28 @@ pipeline {
                         reportCheck {
                             dir(contractsDir) {
                                 sh 'forge test -vvv'
+                            }
+                        }
+                    }
+                }
+
+                stage('Forge Coverage') {
+                    agent {
+                        docker {
+                            image images.foundry
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        reportCheck {
+                            sh "mkdir -p ${reportsDir}"
+                            dir(contractsDir) {
+                                sh """
+                                    bash -o pipefail -c 'forge coverage --color never --no-match-coverage "script/.*" --out out-coverage --cache-path cache-coverage | tee ../${reportsDir}/coverage-summary.txt'
+                                """
+                            }
+                            script {
+                                enforceCoverageGate(readFile("${reportsDir}/coverage-summary.txt"), coverageThreshold as BigDecimal)
                             }
                         }
                     }
